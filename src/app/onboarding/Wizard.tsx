@@ -104,6 +104,14 @@ export default function OnboardingWizard({ initialState }: { initialState: Recor
                   <Label>Secondary Color</Label>
                   <Input type="color" name="secondaryColor" defaultValue={initialState.tenant?.secondaryColor || "#666666"} />
                 </div>
+                <div className="space-y-2">
+                  <Label>Background Color</Label>
+                  <Input type="color" name="bgColor" defaultValue={initialState.tenant?.bgColor || "#ffffff"} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Text Color</Label>
+                  <Input type="color" name="textColor" defaultValue={initialState.tenant?.textColor || "#000000"} />
+                </div>
               </div>
             </>
           )}
