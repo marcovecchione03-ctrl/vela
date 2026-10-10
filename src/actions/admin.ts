@@ -4,7 +4,7 @@ import { requireSuperAdmin, requireNotImpersonating, requireAuthenticatedUser } 
 import { prisma } from "@/lib/db/prisma";
 import { revalidatePath } from "next/cache";
 import { reconcileSubscription } from "@/lib/billing/reconcile";
-import { stripe } from "@/lib/billing/stripe";
+import { getStripeClient } from "@/lib/billing/stripe";
 import { checkRateLimit, generateRateLimitKey } from "@/lib/rate-limiter";
 import { changePlan } from "@/actions/billing";
 
@@ -106,6 +106,7 @@ export async function grantFreeMonths(tenantId: string, months: number, reason: 
   
   if (subscription?.stripeSubscriptionId) {
     // Extend Stripe trial end to grant free months safely
+    const stripe = getStripeClient();
     const stripeSub = await stripe.subscriptions.retrieve(subscription.stripeSubscriptionId);
     let currentEnd = (stripeSub as any).current_period_end;
     if ((stripeSub as any).trial_end && (stripeSub as any).trial_end > currentEnd) {

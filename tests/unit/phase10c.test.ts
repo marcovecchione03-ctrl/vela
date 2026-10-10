@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { superAdminChangePlan, grantFreeMonths, togglePlatformSuspension, addSupportNote, retryCalendarSyncJob, retryNotificationJob } from '@/actions/admin';
 import { prisma } from '@/lib/db/prisma';
 import { checkRateLimit } from '@/lib/rate-limiter';
-import { stripe } from '@/lib/billing/stripe';
+import { getStripeClient, isStripeConfigured } from '@/lib/billing/stripe';
 import { changePlan } from '@/actions/billing';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth/config';
@@ -22,8 +22,10 @@ vi.mock('@/lib/db/prisma', () => ({
   }
 }));
 
+const mockStripe = { subscriptions: { retrieve: vi.fn(), update: vi.fn() } };
 vi.mock('@/lib/billing/stripe', () => ({
-  stripe: { subscriptions: { retrieve: vi.fn(), update: vi.fn() } }
+  getStripeClient: vi.fn(() => mockStripe),
+  isStripeConfigured: vi.fn().mockReturnValue(true)
 }));
 
 vi.mock('@/actions/billing', () => ({
@@ -57,9 +59,9 @@ describe('Phase 10C Final Verification', () => {
       (getServerSession as any).mockResolvedValue({ user: { id: 'admin-1' } });
       (prisma.user.findUnique as any).mockResolvedValue({ isSuperAdmin: true });
       (prisma.subscription.findUnique as any).mockResolvedValue({ stripeSubscriptionId: 'sub_123', pendingPlan: null });
-      (stripe.subscriptions.retrieve as any).mockResolvedValue({ current_period_end: 1000, trial_end: null });
+      (mockStripe.subscriptions.retrieve as any).mockResolvedValue({ current_period_end: 1000, trial_end: null });
       await grantFreeMonths('tenant-1', 1, 'Support');
-      expect(stripe.subscriptions.update).toHaveBeenCalledWith('sub_123', expect.objectContaining({ trial_end: expect.any(Number) }));
+      expect(mockStripe.subscriptions.update).toHaveBeenCalledWith('sub_123', expect.objectContaining({ trial_end: expect.any(Number) }));
     });
     
     it('rejects free months if pending plan change exists', async () => {

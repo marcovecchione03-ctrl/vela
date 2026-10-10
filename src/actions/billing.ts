@@ -3,7 +3,7 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth/config"
 import { prisma } from "@/lib/db/prisma"
-import { stripe } from "@/lib/billing/stripe"
+import { getStripeClient } from "@/lib/billing/stripe"
 import { PLANS, PlanName, BillingInterval } from "@/lib/billing/plans"
 import { env } from "@/lib/env"
 import { headers } from "next/headers"
@@ -41,6 +41,7 @@ export async function createCheckoutSession(
     stripeCustomerId = existingSub.stripeCustomerId
   } else {
     // Create new customer
+    const stripe = getStripeClient();
     const customer = await stripe.customers.create({
       email: session.user.email || undefined,
       metadata: { tenantId }
@@ -71,6 +72,7 @@ export async function createCheckoutSession(
 
   const idempotencyKey = `checkout_${tenantId}_${attempt.id}`
 
+  const stripe = getStripeClient();
   const stripeSession = await stripe.checkout.sessions.create({
     mode: "subscription",
     customer: stripeCustomerId,
@@ -113,6 +115,7 @@ export async function createPortalSession(tenantId: string, returnUrl: string) {
   const existingSub = await prisma.subscription.findUnique({ where: { tenantId } })
   if (!existingSub?.stripeCustomerId) throw new Error("No billing customer found")
 
+  const stripe = getStripeClient();
   const portalSession = await stripe.billingPortal.sessions.create({
     customer: existingSub.stripeCustomerId,
     return_url: returnUrl,
@@ -153,6 +156,7 @@ export async function changePlan(tenantId: string, newPlan: PlanName, newInterva
   const newPriceId = planConfig.pricing[newInterval].priceId
   if (!newPriceId) throw new Error("Invalid price ID configuration")
 
+  const stripe = getStripeClient();
   const stripeSub = await stripe.subscriptions.retrieve(subscription.stripeSubscriptionId)
   
   if (subscription.plan === "BASIC" && newPlan === "PRO") {
@@ -232,6 +236,7 @@ export async function cancelSubscription(tenantId: string) {
   const subscription = await prisma.subscription.findUnique({ where: { tenantId } })
   if (!subscription || !subscription.stripeSubscriptionId) throw new Error("No active subscription")
 
+  const stripe = getStripeClient();
   await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
     cancel_at_period_end: true
   })
@@ -257,6 +262,7 @@ export async function reactivateSubscription(tenantId: string) {
   const subscription = await prisma.subscription.findUnique({ where: { tenantId } })
   if (!subscription || !subscription.stripeSubscriptionId) throw new Error("No active subscription")
 
+  const stripe = getStripeClient();
   await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
     cancel_at_period_end: false
   })
@@ -282,6 +288,7 @@ export async function cancelScheduledChange(tenantId: string) {
   const subscription = await prisma.subscription.findUnique({ where: { tenantId } })
   if (!subscription || !subscription.stripeSubscriptionId) throw new Error("No active subscription")
 
+  const stripe = getStripeClient();
   const stripeSub = await stripe.subscriptions.retrieve(subscription.stripeSubscriptionId)
   if (stripeSub.schedule) {
     const scheduleId = typeof stripeSub.schedule === 'string' ? stripeSub.schedule : stripeSub.schedule.id

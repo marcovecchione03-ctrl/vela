@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db/prisma"
-import { stripe } from "@/lib/billing/stripe"
+import { getStripeClient, isStripeConfigured } from "@/lib/billing/stripe"
 import { getPlanByPriceId, BillingInterval, PlanName } from "@/lib/billing/plans"
 import { createAuditLog } from "@/lib/audit"
 
@@ -12,7 +12,12 @@ export async function reconcileSubscription(tenantId: string) {
     return { success: false, reason: "No active Stripe subscription mapped." }
   }
 
+  if (!isStripeConfigured()) {
+    return { success: false, reason: "Stripe is not configured" }
+  }
+
   try {
+    const stripe = getStripeClient();
     const stripeSub = await stripe.subscriptions.retrieve(subscription.stripeSubscriptionId)
     const status = mapStripeStatusToInternal(stripeSub.status)
     const priceId = stripeSub.items.data[0]?.price.id

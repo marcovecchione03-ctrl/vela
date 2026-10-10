@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { headers } from "next/headers"
-import { stripe } from "@/lib/billing/stripe"
+import { getStripeClient, isStripeConfigured } from "@/lib/billing/stripe"
 import { prisma } from "@/lib/db/prisma"
 import { env } from "@/lib/env"
 import Stripe from "stripe"
@@ -13,11 +13,16 @@ export async function POST(req: Request) {
 
   let event: Stripe.Event
 
+  if (!isStripeConfigured()) {
+    return new NextResponse("Stripe not configured", { status: 501 })
+  }
+  const stripe = getStripeClient();
+
   try {
     event = stripe.webhooks.constructEvent(
       body,
       signature,
-      env.STRIPE_WEBHOOK_SECRET || "whsec_mock"
+      env.STRIPE_WEBHOOK_SECRET!
     )
   } catch (err: any) {
     console.error("Webhook signature verification failed:", err.message)
