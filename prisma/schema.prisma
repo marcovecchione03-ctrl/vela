@@ -1,0 +1,925 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
+}
+
+// ------------------------------------------------------
+// ENUMS
+// ------------------------------------------------------
+enum TenantStatus {
+  ACTIVE
+  GRACE_PERIOD
+  SUSPENDED
+  CANCELLED
+}
+
+enum DomainStatus {
+  PENDING_VERIFICATION
+  VERIFIED
+  PROVISIONING
+  ACTIVE
+  FAILED
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  EMPLOYEE
+  CUSTOMER
+}
+
+enum PriceMode {
+  FIXED
+  STARTING_FROM
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  ARRIVED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum Plan {
+  BASIC
+  PRO
+}
+
+enum SubscriptionStatus {
+  PENDING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  UNPAID
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum AvailabilityChangeStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ------------------------------------------------------
+// PLATFORM LEVEL MODELS
+// ------------------------------------------------------
+
+model User {
+  id              String             @id @default(uuid())
+  email           String             @unique
+  passwordHash    String?
+  emailVerified   DateTime?
+  provider        String? // e.g., 'local', 'google', 'apple'
+  isSuperAdmin    Boolean            @default(false)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  memberships     TenantMembership[]
+  sentInvitations TeamInvitation[]
+}
+
+model Subscription {
+  id                   String             @id @default(uuid())
+  tenantId             String             @unique
+  stripeCustomerId     String?
+  stripeSubscriptionId String?            @unique
+  stripePriceId        String?
+  plan                 Plan               @default(BASIC)
+  interval             String             @default("month") // "month" or "year"
+  status               SubscriptionStatus @default(ACTIVE)
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+
+  // Phase 8D: Scheduled pending changes
+  pendingPlan        String?
+  pendingInterval    String?
+  pendingEffectiveAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+// ------------------------------------------------------
+// TENANT LEVEL MODELS
+// ------------------------------------------------------
+
+model Tenant {
+  id                  String       @id @default(uuid())
+  slug                String       @unique
+  name                String
+  status              TenantStatus @default(ACTIVE)
+  gracePeriodEndsAt   DateTime?
+  defaultLocale       String       @default("it-IT")
+  currency            String       @default("EUR")
+  timezone            String       @default("Europe/Rome")
+  showPrices          Boolean      @default(true)
+  bookingApprovalMode String       @default("AUTOMATIC") // AUTOMATIC, MANUAL
+
+  // Phase 3: Onboarding & Business Identity
+  onboardingState String  @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED
+  onboardingStep  Int     @default(0)
+  businessType    String?
+  description     String?
+  businessEmail   String?
+  businessPhone   String?
+  websiteUrl      String?
+  instagramUrl    String?
+  tiktokUrl       String?
+  facebookUrl     String?
+
+  // Phase 3: Branding
+  logoUrl        String?
+  coverUrl       String?
+  primaryColor   String?
+  secondaryColor String?
+  bgColor        String?
+  textColor      String?
+
+  // Phase 3: Booking Rules
+  cancellationDeadlineHours     Int     @default(24)
+  maxAdvanceBookingDays         Int     @default(30)
+  minBookingNoticeHours         Int     @default(1)
+  defaultBookingBufferMins      Int     @default(0)
+  maxCustomerAppointmentsPerDay Int?
+  allowCustomerOverlaps         Boolean @default(false)
+
+  // Phase 10: Platform operations
+  platformSuspendedAt      DateTime?
+  platformSuspendedBy      String?
+  platformSuspensionReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  domains              Domain[]
+  memberships          TenantMembership[]
+  locations            Location[]
+  categories           ServiceCategory[]
+  services             Service[]
+  bookings             Booking[]
+  customers            CustomerProfile[]
+  employees            EmployeeProfile[]
+  auditLogs            AuditLog[]
+  subscription         Subscription?
+  customerTags         CustomerTag[]
+  featureFlags         TenantFeatureFlag[]
+  consentLogs          ConsentLog[]
+  invitations          TeamInvitation[]
+  availabilityRequests AvailabilityChangeRequest[]
+  supportNotes         PlatformSupportNote[]
+}
+
+model Domain {
+  id                 String       @id @default(uuid())
+  tenantId           String
+  hostname           String       @unique
+  normalizedHostname String       @unique
+  status             DomainStatus @default(PENDING_VERIFICATION)
+  verificationToken  String?
+  isPrimary          Boolean      @default(false)
+  sslStatus          String       @default("NONE")
+  verifiedAt         DateTime?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+// ------------------------------------------------------
+// IDENTITY & MEMBERSHIPS (TENANT-SCOPED)
+// ------------------------------------------------------
+
+model TenantMembership {
+  id        String   @id @default(uuid())
+  tenantId  String
+  userId    String
+  role      Role     @default(CUSTOMER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  employeeProfile EmployeeProfile?
+  customerProfile CustomerProfile?
+
+  @@unique([tenantId, userId])
+  @@index([userId])
+}
+
+model EmployeeProfile {
+  id                 String  @id @default(uuid())
+  tenantId           String
+  tenantMembershipId String  @unique
+  name               String
+  surname            String?
+  bio                String?
+  jobTitle           String?
+  specialization     String?
+  photoUrl           String?
+  calendarColor      String?
+  publicVisibility   Boolean @default(true)
+  isActive           Boolean @default(true)
+
+  // Phase 9: Apple Calendar ICS feed
+  icsTokenHash String?
+
+  lastAutoAssignedAt DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  tenant               Tenant                       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantMembership     TenantMembership             @relation(fields: [tenantMembershipId], references: [id], onDelete: Cascade)
+  services             ServiceEmployee[]
+  locations            EmployeeLocation[]
+  bookings             Booking[]
+  timeBlocks           TimeBlock[]
+  calendarConn         ExternalCalendarConnection[]
+  availabilityRules    AvailabilityRule[]
+  exceptions           AvailabilityException[]
+  availabilityRequests AvailabilityChangeRequest[]
+
+  @@unique([id, tenantId])
+  @@index([tenantId])
+}
+
+model CustomerProfile {
+  id                 String    @id @default(uuid())
+  tenantId           String
+  tenantMembershipId String    @unique
+  firstName          String
+  lastName           String
+  phone              String?
+  notes              String?
+  isBlocked          Boolean   @default(false)
+  blockedAt          DateTime?
+  blockedById        String?
+  blockReason        String?
+  score              Int       @default(80) // V1 base score is 80
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  tenant           Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantMembership TenantMembership        @relation(fields: [tenantMembershipId], references: [id], onDelete: Cascade)
+  bookings         Booking[]
+  scoreEvents      CustomerScoreEvent[]
+  tags             CustomerTagAssignment[]
+  customerNotes    CustomerNote[]
+
+  @@unique([id, tenantId])
+  @@index([tenantId])
+  @@index([tenantId, isBlocked])
+  @@index([tenantId, createdAt])
+}
+
+// ------------------------------------------------------
+// BUSINESS ENTITIES (TENANT-SCOPED)
+// ------------------------------------------------------
+
+model Location {
+  id        String   @id @default(uuid())
+  tenantId  String
+  name      String
+  address   String?
+  phone     String?
+  timezone  String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant            Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  services          ServiceLocation[]
+  employees         EmployeeLocation[]
+  bookings          Booking[]
+  availabilityRules AvailabilityRule[]
+
+  @@unique([id, tenantId])
+  @@index([tenantId])
+}
+
+model EmployeeLocation {
+  employeeId String
+  locationId String
+  tenantId   String
+
+  employee EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  location Location        @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@id([employeeId, locationId])
+  @@index([tenantId])
+}
+
+model ServiceCategory {
+  id         String   @id @default(uuid())
+  tenantId   String
+  name       String
+  orderIndex Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  services Service[]
+
+  @@index([tenantId])
+}
+
+model Service {
+  id                 String    @id @default(uuid())
+  tenantId           String
+  categoryId         String
+  name               String
+  description        String?
+  durationMinutes    Int
+  price              Int // Stored in minor units (e.g., cents)
+  priceMode          PriceMode @default(FIXED)
+  imageUrl           String?
+  isActive           Boolean   @default(true)
+  bufferOverrideMins Int?
+  availableDays      Int[]     @default([0, 1, 2, 3, 4, 5, 6])
+  concurrentCapacity Int       @default(1)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  tenant       Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  category     ServiceCategory   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  employees    ServiceEmployee[]
+  locations    ServiceLocation[]
+  bookingLinks BookingService[]
+
+  components CombinedServiceComponent[] @relation("CombinedParent")
+  partOf     CombinedServiceComponent[] @relation("CombinedChild")
+
+  @@unique([id, tenantId])
+  @@index([tenantId])
+  @@index([categoryId])
+}
+
+model ServiceEmployee {
+  serviceId  String
+  employeeId String
+  tenantId   String
+
+  service  Service         @relation(fields: [serviceId, tenantId], references: [id, tenantId], onDelete: Cascade)
+  employee EmployeeProfile @relation(fields: [employeeId, tenantId], references: [id, tenantId], onDelete: Cascade)
+
+  @@id([serviceId, employeeId])
+  @@index([tenantId])
+}
+
+model ServiceLocation {
+  serviceId  String
+  locationId String
+  tenantId   String
+
+  service  Service  @relation(fields: [serviceId, tenantId], references: [id, tenantId], onDelete: Cascade)
+  location Location @relation(fields: [locationId, tenantId], references: [id, tenantId], onDelete: Cascade)
+
+  @@id([serviceId, locationId])
+  @@index([tenantId])
+}
+
+// ------------------------------------------------------
+// AVAILABILITY (TENANT-SCOPED)
+// ------------------------------------------------------
+
+model AvailabilityRule {
+  id         String   @id @default(uuid())
+  tenantId   String
+  locationId String? // If null, applies to tenant generally. If set, applies to location.
+  employeeId String? // If null, applies to location generally
+  dayOfWeek  Int // 0 = Sunday, 1 = Monday, etc.
+  isActive   Boolean  @default(true)
+  startTime  String // e.g. "09:00"
+  endTime    String // e.g. "17:00"
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  employee EmployeeProfile? @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  location Location?        @relation(fields: [locationId, tenantId], references: [id, tenantId], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([locationId])
+  @@index([employeeId])
+}
+
+model AvailabilityException {
+  id         String   @id @default(uuid())
+  tenantId   String
+  employeeId String?
+  date       DateTime // The specific date
+  isClosed   Boolean  @default(false)
+  startTime  String?
+  endTime    String?
+  reason     String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  employee EmployeeProfile? @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([employeeId])
+}
+
+model TimeBlock {
+  id         String   @id @default(uuid())
+  tenantId   String
+  employeeId String
+  startTime  DateTime
+  endTime    DateTime
+  reason     String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  employee EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([employeeId])
+}
+
+// ------------------------------------------------------
+// BOOKINGS (TENANT-SCOPED)
+// ------------------------------------------------------
+
+model Booking {
+  id               String        @id @default(uuid())
+  tenantId         String
+  bookingReference String // Short public reference ID
+  locationId       String
+  employeeId       String
+  customerId       String? // Null if oneTimeClient is used
+  oneTimeClientId  String?
+  startTime        DateTime
+  endTime          DateTime
+  status           BookingStatus @default(PENDING)
+  customerNote     String?
+  internalNote     String?
+  lateCancellation Boolean       @default(false)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Compound FKs ensure that the related entity ALWAYS belongs to the same tenant as the Booking
+  location Location         @relation(fields: [locationId, tenantId], references: [id, tenantId], onDelete: Cascade)
+  employee EmployeeProfile  @relation(fields: [employeeId, tenantId], references: [id, tenantId], onDelete: Cascade)
+  customer CustomerProfile? @relation(fields: [customerId, tenantId], references: [id, tenantId], onDelete: Cascade)
+
+  oneTimeClient OneTimeClient? @relation(fields: [oneTimeClientId], references: [id], onDelete: Cascade)
+
+  services      BookingService[]
+  statusHistory BookingStatusHistory[]
+  changeHistory BookingChangeHistory[]
+  notes         BookingNote[]
+  scoreEvents   CustomerScoreEvent[]
+
+  @@unique([id, tenantId])
+  @@unique([tenantId, bookingReference])
+  @@index([tenantId])
+  @@index([locationId])
+  @@index([employeeId])
+  @@index([customerId])
+  @@index([tenantId, employeeId, startTime, endTime])
+  @@index([tenantId, startTime, endTime])
+  @@index([tenantId, status, startTime])
+  @@index([tenantId, customerId, startTime])
+  @@index([tenantId, locationId, startTime])
+}
+
+model BookingChangeHistory {
+  id                 String   @id @default(uuid())
+  tenantId           String
+  bookingId          String
+  actorId            String? // The user ID who made the change
+  actorRole          Role? // The role of the actor
+  previousStart      DateTime
+  previousEnd        DateTime
+  newStart           DateTime
+  newEnd             DateTime
+  previousEmployeeId String?
+  newEmployeeId      String?
+  createdAt          DateTime @default(now())
+
+  booking Booking @relation(fields: [bookingId, tenantId], references: [id, tenantId], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([bookingId])
+}
+
+model OneTimeClient {
+  id        String   @id @default(uuid())
+  tenantId  String
+  firstName String
+  lastName  String
+  email     String?
+  phone     String?
+  createdAt DateTime @default(now())
+
+  bookings Booking[]
+
+  @@index([tenantId])
+}
+
+model BookingService {
+  id              String @id @default(uuid())
+  tenantId        String
+  bookingId       String
+  serviceId       String
+  // Snapshot data to preserve historical integrity if service changes later
+  serviceName     String
+  durationMinutes Int
+  price           Int
+
+  booking Booking @relation(fields: [bookingId, tenantId], references: [id, tenantId], onDelete: Cascade)
+  service Service @relation(fields: [serviceId, tenantId], references: [id, tenantId], onDelete: Restrict)
+
+  @@index([tenantId])
+  @@index([bookingId])
+}
+
+model BookingStatusHistory {
+  id        String        @id @default(uuid())
+  tenantId  String
+  bookingId String
+  status    BookingStatus
+  reason    String?
+  createdAt DateTime      @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([bookingId])
+}
+
+model BookingNote {
+  id        String   @id @default(uuid())
+  tenantId  String
+  bookingId String
+  authorId  String // ID of the User who left the note
+  content   String
+  createdAt DateTime @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([bookingId])
+}
+
+// ------------------------------------------------------
+// CUSTOMER CRM EXTENSIONS (TENANT-SCOPED)
+// ------------------------------------------------------
+
+model CustomerScoreEvent {
+  id            String   @id @default(uuid())
+  tenantId      String
+  customerId    String
+  bookingId     String?
+  eventType     String // e.g. "BOOKING_COMPLETED", "LATE_CANCELLATION", "NO_SHOW", "MANUAL_ADJUSTMENT"
+  scoreChange   Int
+  previousScore Int      @default(80)
+  newScore      Int
+  actorId       String? // The user ID who triggered this, if any
+  reason        String?
+  createdAt     DateTime @default(now())
+
+  customer CustomerProfile @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  booking  Booking?        @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  // Ensure a specific event type (e.g., BOOKING_COMPLETED) is only applied once per booking
+  // We use @@unique to enforce idempotency. Null bookingId allows manual adjustments without constraint.
+  @@unique([bookingId, eventType])
+  @@index([tenantId])
+  @@index([customerId])
+  @@index([tenantId, customerId, createdAt])
+}
+
+model CustomerNote {
+  id         String   @id @default(uuid())
+  tenantId   String
+  customerId String
+  authorId   String
+  content    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  customer CustomerProfile @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([customerId])
+}
+
+model CustomerTag {
+  id        String   @id @default(uuid())
+  tenantId  String
+  name      String
+  color     String?
+  createdAt DateTime @default(now())
+
+  tenant      Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  assignments CustomerTagAssignment[]
+
+  @@index([tenantId])
+}
+
+model CustomerTagAssignment {
+  tagId      String
+  customerId String
+  tenantId   String
+
+  tag      CustomerTag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  customer CustomerProfile @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@id([tagId, customerId])
+  @@index([tenantId])
+  @@index([tenantId, customerId, tagId])
+}
+
+// ------------------------------------------------------
+// INTEGRATIONS & LOGS (TENANT-SCOPED)
+// ------------------------------------------------------
+
+model ExternalCalendarConnection {
+  id                 String  @id @default(uuid())
+  tenantId           String
+  employeeId         String
+  provider           String // 'GOOGLE', 'MICROSOFT'
+  providerAccountId  String?
+  externalCalendarId String?
+
+  encryptedAccessToken  String
+  encryptedRefreshToken String
+  tokenExpiresAt        DateTime
+  scopes                String?
+
+  syncEnabled Boolean   @default(true)
+  lastSyncAt  DateTime?
+  lastError   String?
+  revokedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employee EmployeeProfile         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  events   ExternalCalendarEvent[]
+  jobs     CalendarSyncJob[]
+
+  @@index([tenantId])
+  @@index([employeeId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  tenantId  String
+  userId    String
+  title     String
+  content   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([userId])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  tenantId   String
+  actorId    String? // ID of the User, null if system action
+  action     String
+  entityType String
+  entityId   String
+  metadata   String? // JSON string
+  createdAt  DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([actorId])
+}
+
+model FeatureFlagDefinition {
+  id          String   @id @default(uuid())
+  flagName    String   @unique
+  description String?
+  defaultOn   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model TenantFeatureFlag {
+  id        String   @id @default(uuid())
+  tenantId  String
+  flagName  String
+  isEnabled Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, flagName])
+  @@index([tenantId])
+}
+
+model PlatformSupportNote {
+  id        String   @id @default(uuid())
+  tenantId  String
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+model ConsentLog {
+  id         String   @id @default(uuid())
+  tenantId   String
+  userId     String
+  consentKey String
+  granted    Boolean
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([userId])
+}
+
+// ------------------------------------------------------
+// NEW PHASE 4 MODELS
+// ------------------------------------------------------
+
+model TeamInvitation {
+  id            String           @id @default(uuid())
+  tenantId      String
+  email         String
+  role          Role
+  inviterUserId String
+  tokenHash     String           @unique
+  status        InvitationStatus @default(PENDING)
+  expiresAt     DateTime
+  acceptedAt    DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  tenant  Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  inviter User   @relation(fields: [inviterUserId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([email])
+}
+
+model AvailabilityChangeRequest {
+  id               String                   @id @default(uuid())
+  tenantId         String
+  employeeId       String
+  requestedChanges String // JSON string containing proposed rules/blocks
+  status           AvailabilityChangeStatus @default(PENDING)
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+
+  tenant   Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([employeeId])
+}
+
+model CombinedServiceComponent {
+  id          String @id @default(uuid())
+  tenantId    String
+  parentId    String
+  componentId String
+  orderIndex  Int    @default(0)
+
+  parent    Service @relation("CombinedParent", fields: [parentId, tenantId], references: [id, tenantId], onDelete: Cascade)
+  component Service @relation("CombinedChild", fields: [componentId, tenantId], references: [id, tenantId], onDelete: Restrict)
+
+  @@unique([parentId, componentId])
+  @@index([tenantId])
+  @@index([componentId])
+}
+
+model StripeWebhookEvent {
+  id        String   @id // The Stripe event ID (evt_...)
+  type      String // e.g. checkout.session.completed
+  status    String // "PROCESSED", "FAILED"
+  error     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BillingCheckoutAttempt {
+  id        String   @id @default(uuid())
+  tenantId  String
+  plan      String
+  interval  String
+  url       String?
+  status    String   @default("PENDING") // PENDING, COMPLETED, EXPIRED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+}
+
+// ------------------------------------------------------
+// PHASE 9: EXTERNAL CALENDAR EVENTS & JOBS
+// ------------------------------------------------------
+
+model ExternalCalendarEvent {
+  id                 String   @id @default(uuid())
+  tenantId           String
+  bookingId          String
+  employeeId         String
+  connectionId       String
+  provider           String
+  externalEventId    String
+  externalCalendarId String
+  syncStatus         String   @default("SYNCED") // SYNCED, FAILED
+  lastSyncedAt       DateTime @default(now())
+  lastError          String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  connection ExternalCalendarConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  // We do not formally relation Booking to avoid cascading issues if we delete bookings, or we can. Let's not relation Booking for loose coupling, or relation it with Cascade.
+
+  @@unique([bookingId, connectionId])
+  @@index([tenantId])
+  @@index([employeeId])
+}
+
+model CalendarSyncJob {
+  id            String   @id @default(uuid())
+  tenantId      String
+  bookingId     String
+  employeeId    String
+  connectionId  String
+  action        String // CREATE, UPDATE, DELETE
+  status        String   @default("PENDING") // PENDING, PROCESSING, SUCCEEDED, FAILED
+  attempts      Int      @default(0)
+  nextAttemptAt DateTime @default(now())
+  lastError     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  connection ExternalCalendarConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([status, nextAttemptAt])
+}
+
+// ------------------------------------------------------
+// PHASE 9: PUSH NOTIFICATIONS
+// ------------------------------------------------------
+
+model PushSubscription {
+  id         String    @id @default(uuid())
+  tenantId   String
+  userId     String
+  endpoint   String    @unique
+  p256dh     String
+  auth       String
+  lastUsedAt DateTime  @default(now())
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([tenantId])
+  @@index([userId])
+}
+
+model NotificationJob {
+  id            String   @id @default(uuid())
+  tenantId      String
+  userId        String
+  type          String
+  bookingId     String?
+  payload       String? // JSON string of safe data
+  status        String   @default("PENDING") // PENDING, PROCESSING, SUCCEEDED, FAILED
+  attempts      Int      @default(0)
+  nextAttemptAt DateTime @default(now())
+  lastError     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([status, nextAttemptAt])
+}
