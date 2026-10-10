@@ -2,6 +2,7 @@
 
 import { z } from "zod"
 import { prisma } from "@/lib/db/prisma"
+import { normalizeWebsiteUrl } from "@/lib/utils/url"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth/config"
 import { headers } from "next/headers"
@@ -18,8 +19,8 @@ const step3Schema = z.object({
 const step4Schema = z.object({ 
   businessEmail: z.string().email().or(z.literal("")),
   businessPhone: z.string().optional(),
-  websiteUrl: z.string().url().or(z.literal("")).optional(),
-  instagramUrl: z.string().url().or(z.literal("")).optional()
+  websiteUrl: z.preprocess(normalizeWebsiteUrl, z.string().url("Must be a valid URL").optional()),
+  instagramUrl: z.preprocess(normalizeWebsiteUrl, z.string().url("Must be a valid URL").optional())
 })
 const step5Schema = z.object({ locationName: z.string().min(1), address: z.string().min(1), timezone: z.string().min(1) })
 const step6Schema = z.object({

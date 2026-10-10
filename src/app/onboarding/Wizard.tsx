@@ -224,7 +224,7 @@ export default function OnboardingWizard({ initialState }: { initialState: Recor
               </div>
               <div className="space-y-2">
                 <Label>Website (Optional)</Label>
-                <Input name="websiteUrl" type="url" defaultValue={initialState.tenant?.websiteUrl || ""} />
+                <Input name="websiteUrl" type="text" placeholder="example.com" defaultValue={initialState.tenant?.websiteUrl || ""} />
               </div>
             </>
           )}
