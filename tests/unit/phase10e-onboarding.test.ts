@@ -42,8 +42,13 @@ describe('Phase 10E - Onboarding Step 3 Validation', () => {
   });
 
   it('Persisted custom colors are not destroyed merely by loading Step 3', () => {
-    // Tests that if 'Custom' is selected, it uses the initialState values for submission
     expect(wizardContent).toContain('value={selectedTheme === "Custom" ? initialState.tenant?.primaryColor : BRANDING_PRESETS[selectedTheme]?.primaryColor}');
     expect(wizardContent).toContain('return "Custom" // Persisted custom styling');
+  });
+
+  it('Wizard uses useFormStatus for immediate loading state', () => {
+    expect(wizardContent).toContain('const { pending } = useFormStatus()');
+    expect(wizardContent).toContain('disabled={pending}');
+    expect(wizardContent).toContain('{pending ? "Saving..."');
   });
 });

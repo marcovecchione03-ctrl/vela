@@ -77,10 +77,8 @@ export async function submitOnboardingStep(step: number, formData: FormData) {
   const rawData = Object.fromEntries(formData.entries())
 
   try {
-    // IDEMPOTENCY: We derive tenant from user's OWNER membership, not from client request.
-    const existingTenant = await getOwnerTenant(userId)
-    
     if (step === 1) {
+      const existingTenant = await getOwnerTenant(userId)
       const parsed = step1Schema.safeParse(rawData)
       if (!parsed.success) return { error: "Invalid business type." }
 
@@ -110,17 +108,15 @@ export async function submitOnboardingStep(step: number, formData: FormData) {
       return { success: true, step: 2 }
     }
 
-    if (!existingTenant) return { error: "No onboarding in progress." }
-    const tenantId = existingTenant.id
-
     if (step === 2) {
       const parsed = step2Schema.safeParse(rawData)
       if (!parsed.success) return { error: parsed.error.issues[0].message }
       
-      await prisma.tenant.update({
-        where: { id: tenantId },
+      const res = await prisma.tenant.updateMany({
+        where: { memberships: { some: { userId, role: "OWNER" } } },
         data: { name: parsed.data.name, description: parsed.data.description, onboardingStep: 3 }
       })
+      if (res.count === 0) return { error: "No onboarding in progress." }
       return { success: true, step: 3 }
     }
 
@@ -128,10 +124,11 @@ export async function submitOnboardingStep(step: number, formData: FormData) {
       const parsed = step3Schema.safeParse(rawData)
       if (!parsed.success) return { error: parsed.error.issues[0].message }
 
-      await prisma.tenant.update({
-        where: { id: tenantId },
+      const res = await prisma.tenant.updateMany({
+        where: { memberships: { some: { userId, role: "OWNER" } } },
         data: { ...parsed.data, onboardingStep: 4 }
       })
+      if (res.count === 0) return { error: "No onboarding in progress." }
       return { success: true, step: 4 }
     }
 
@@ -139,14 +136,19 @@ export async function submitOnboardingStep(step: number, formData: FormData) {
       const parsed = step4Schema.safeParse(rawData)
       if (!parsed.success) return { error: parsed.error.issues[0].message }
 
-      await prisma.tenant.update({
-        where: { id: tenantId },
+      const res = await prisma.tenant.updateMany({
+        where: { memberships: { some: { userId, role: "OWNER" } } },
         data: { ...parsed.data, onboardingStep: 5 }
       })
+      if (res.count === 0) return { error: "No onboarding in progress." }
       return { success: true, step: 5 }
     }
 
     if (step === 5) {
+      const existingTenant = await getOwnerTenant(userId)
+      if (!existingTenant) return { error: "No onboarding in progress." }
+      const tenantId = existingTenant.id
+
       const parsed = step5Schema.safeParse(rawData)
       if (!parsed.success) return { error: parsed.error.issues[0].message }
 
@@ -167,6 +169,10 @@ export async function submitOnboardingStep(step: number, formData: FormData) {
     }
 
     if (step === 6) {
+      const existingTenant = await getOwnerTenant(userId)
+      if (!existingTenant) return { error: "No onboarding in progress." }
+      const tenantId = existingTenant.id
+
       // Parse days from rawData
       const rules = []
       for (let i = 0; i < 7; i++) {
@@ -200,10 +206,11 @@ export async function submitOnboardingStep(step: number, formData: FormData) {
       const parsed = step7Schema.safeParse({ ...rawData, allowCustomerOverlaps })
       if (!parsed.success) return { error: parsed.error.issues[0].message }
 
-      await prisma.tenant.update({
-        where: { id: tenantId },
+      const res = await prisma.tenant.updateMany({
+        where: { memberships: { some: { userId, role: "OWNER" } } },
         data: { ...parsed.data, onboardingStep: 8 }
       })
+      if (res.count === 0) return { error: "No onboarding in progress." }
       return { success: true, step: 8 }
     }
 
@@ -212,10 +219,11 @@ export async function submitOnboardingStep(step: number, formData: FormData) {
       const parsed = step8Schema.safeParse({ showPrices })
       if (!parsed.success) return { error: parsed.error.issues[0].message }
 
-      await prisma.tenant.update({
-        where: { id: tenantId },
+      const res = await prisma.tenant.updateMany({
+        where: { memberships: { some: { userId, role: "OWNER" } } },
         data: { showPrices: parsed.data.showPrices, onboardingStep: 9 }
       })
+      if (res.count === 0) return { error: "No onboarding in progress." }
       return { success: true, step: 9 }
     }
 
@@ -223,14 +231,18 @@ export async function submitOnboardingStep(step: number, formData: FormData) {
       const parsed = step9Schema.safeParse(rawData)
       if (!parsed.success) return { error: parsed.error.issues[0].message }
 
-      await prisma.tenant.update({
-        where: { id: tenantId },
+      const res = await prisma.tenant.updateMany({
+        where: { memberships: { some: { userId, role: "OWNER" } } },
         data: { ...parsed.data, onboardingStep: 10 }
       })
+      if (res.count === 0) return { error: "No onboarding in progress." }
       return { success: true, step: 10 }
     }
 
     if (step === 10) {
+      const existingTenant = await getOwnerTenant(userId)
+      if (!existingTenant) return { error: "No onboarding in progress." }
+      const tenantId = existingTenant.id
       const parsed = step10Schema.safeParse(rawData)
       if (!parsed.success) return { error: parsed.error.issues[0].message }
 

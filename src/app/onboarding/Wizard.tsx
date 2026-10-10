@@ -10,11 +10,30 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription }
 import { Select } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { BRANDING_PRESETS } from "@/modules/tenant/presets"
+import { useFormStatus } from "react-dom"
+
+function SubmitButton({ step, isBackDisabled, onBack }: { step: number, isBackDisabled: boolean, onBack: () => void }) {
+  const { pending } = useFormStatus()
+  return (
+    <CardFooter className="flex justify-between">
+      <Button 
+        type="button"
+        variant="outline" 
+        disabled={isBackDisabled || pending} 
+        onClick={onBack}
+      >
+        Back
+      </Button>
+      <Button type="submit" form="onboarding-form" disabled={pending}>
+        {pending ? "Saving..." : step === 10 ? "Finish & Setup" : "Continue"}
+      </Button>
+    </CardFooter>
+  )
+}
 
 export default function OnboardingWizard({ initialState }: { initialState: Record<string, any> }) {
   const router = useRouter()
   const [step, setStep] = useState(initialState.step || 1)
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // Determine initial theme selection
@@ -40,11 +59,9 @@ export default function OnboardingWizard({ initialState }: { initialState: Recor
 
 
   async function handleAction(formData: FormData) {
-    setLoading(true)
     setError(null)
     
     const res = await submitOnboardingStep(step, formData)
-    setLoading(false)
 
     if (res.error) {
       setError(res.error)
@@ -84,8 +101,8 @@ export default function OnboardingWizard({ initialState }: { initialState: Recor
         </CardDescription>
       </CardHeader>
       
-      <CardContent>
-        <form id="onboarding-form" action={handleAction} className="space-y-4">
+      <form id="onboarding-form" action={handleAction}>
+        <CardContent className="space-y-4">
           
           {step === 1 && (
             <div className="space-y-2">
@@ -314,20 +331,9 @@ export default function OnboardingWizard({ initialState }: { initialState: Recor
           )}
 
           {error && <div className="text-sm text-red-500">{error}</div>}
-        </form>
-      </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button 
-          variant="outline" 
-          disabled={step === 1 || loading} 
-          onClick={() => setStep(step - 1)}
-        >
-          Back
-        </Button>
-        <Button type="submit" form="onboarding-form" disabled={loading}>
-          {loading ? "Saving..." : step === 10 ? "Finish & Setup" : "Continue"}
-        </Button>
-      </CardFooter>
+        </CardContent>
+        <SubmitButton step={step} isBackDisabled={step === 1} onBack={() => setStep(step - 1)} />
+      </form>
     </Card>
   )
 }
