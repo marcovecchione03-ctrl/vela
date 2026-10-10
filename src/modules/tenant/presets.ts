@@ -1,5 +1,65 @@
 import { prisma } from "@/lib/db/prisma"
 
+export type BrandingPreset = {
+  name: string;
+  description: string;
+  primaryColor: string;
+  secondaryColor: string;
+  bgColor: string;
+  textColor: string;
+}
+
+export const BRANDING_PRESETS: Record<string, BrandingPreset> = {
+  Essential: {
+    name: "Essential",
+    description: "Neutral, universal, clean.",
+    primaryColor: "#171717",
+    secondaryColor: "#737373",
+    bgColor: "#FFFFFF",
+    textColor: "#171717"
+  },
+  Bold: {
+    name: "Bold",
+    description: "Dark, strong, high contrast.",
+    primaryColor: "#111111",
+    secondaryColor: "#404040",
+    bgColor: "#F5F5F5",
+    textColor: "#111111"
+  },
+  Soft: {
+    name: "Soft",
+    description: "Warm and gentle.",
+    primaryColor: "#A85D72",
+    secondaryColor: "#D8A7B5",
+    bgColor: "#FFF8F8",
+    textColor: "#3A2A2F"
+  },
+  Elegant: {
+    name: "Elegant",
+    description: "Premium, warm, understated.",
+    primaryColor: "#3B3028",
+    secondaryColor: "#A88E76",
+    bgColor: "#F7F3EC",
+    textColor: "#2B2521"
+  },
+  Fresh: {
+    name: "Fresh",
+    description: "Clean wellness / health feeling.",
+    primaryColor: "#507A6A",
+    secondaryColor: "#9BB8AA",
+    bgColor: "#F5FAF7",
+    textColor: "#23352E"
+  },
+  Urban: {
+    name: "Urban",
+    description: "Creative, modern, darker personality.",
+    primaryColor: "#242424",
+    secondaryColor: "#7A7A7A",
+    bgColor: "#EDEDED",
+    textColor: "#181818"
+  }
+}
+
 const PRESETS: Record<string, any[]> = {
   "Barber Shop": [
     {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { submitOnboardingStep } from "@/actions/onboarding"
 import { Button } from "@/components/ui/button"
@@ -9,12 +9,35 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Select } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
+import { BRANDING_PRESETS } from "@/modules/tenant/presets"
 
 export default function OnboardingWizard({ initialState }: { initialState: Record<string, any> }) {
   const router = useRouter()
   const [step, setStep] = useState(initialState.step || 1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Determine initial theme selection
+  const initialTheme = useMemo(() => {
+    const t = initialState.tenant
+    if (!t || !t.primaryColor) return "Essential" // Fresh default
+    
+    // Check if it exactly matches a preset
+    for (const [key, preset] of Object.entries(BRANDING_PRESETS)) {
+      if (
+        t.primaryColor.toUpperCase() === preset.primaryColor.toUpperCase() &&
+        t.secondaryColor.toUpperCase() === preset.secondaryColor.toUpperCase() &&
+        t.bgColor.toUpperCase() === preset.bgColor.toUpperCase() &&
+        t.textColor.toUpperCase() === preset.textColor.toUpperCase()
+      ) {
+        return key
+      }
+    }
+    return "Custom" // Persisted custom styling
+  }, [initialState.tenant])
+
+  const [selectedTheme, setSelectedTheme] = useState<string>(initialTheme)
+
 
   async function handleAction(formData: FormData) {
     setLoading(true)
@@ -94,26 +117,82 @@ export default function OnboardingWizard({ initialState }: { initialState: Recor
           )}
 
           {step === 3 && (
-            <>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Primary Color</Label>
-                  <Input type="color" name="primaryColor" defaultValue={initialState.tenant?.primaryColor || "#000000"} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Secondary Color</Label>
-                  <Input type="color" name="secondaryColor" defaultValue={initialState.tenant?.secondaryColor || "#666666"} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Background Color</Label>
-                  <Input type="color" name="bgColor" defaultValue={initialState.tenant?.bgColor || "#ffffff"} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Text Color</Label>
-                  <Input type="color" name="textColor" defaultValue={initialState.tenant?.textColor || "#000000"} />
-                </div>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {selectedTheme === "Custom" && (
+                  <div 
+                    className="border-2 border-primary rounded-md p-4 cursor-pointer relative"
+                    onClick={() => setSelectedTheme("Custom")}
+                  >
+                    <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                    </div>
+                    <h4 className="font-bold">Custom Style</h4>
+                    <p className="text-sm text-neutral-500 mb-4 h-10">Your existing advanced branding.</p>
+                    <div 
+                      className="h-24 w-full rounded-md border shadow-sm flex flex-col items-center justify-center relative overflow-hidden" 
+                      style={{ backgroundColor: initialState.tenant?.bgColor || "#ffffff" }}
+                    >
+                      <div className="text-xs font-semibold mb-2" style={{ color: initialState.tenant?.textColor || "#000000" }}>
+                        Book Appointment
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="px-3 py-1.5 text-xs rounded-md shadow-sm font-medium" style={{ backgroundColor: initialState.tenant?.primaryColor || "#000000", color: "#ffffff" }}>
+                          Primary
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {Object.values(BRANDING_PRESETS).map((preset) => (
+                  <div 
+                    key={preset.name}
+                    className={`border-2 rounded-md p-4 cursor-pointer transition-all relative ${selectedTheme === preset.name ? "border-primary" : "border-transparent bg-neutral-50 hover:bg-neutral-100"}`}
+                    onClick={() => setSelectedTheme(preset.name)}
+                    tabIndex={0}
+                    role="radio"
+                    aria-checked={selectedTheme === preset.name}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault()
+                        setSelectedTheme(preset.name)
+                      }
+                    }}
+                  >
+                    {selectedTheme === preset.name && (
+                      <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                      </div>
+                    )}
+                    <h4 className="font-bold">{preset.name}</h4>
+                    <p className="text-sm text-neutral-500 mb-4 h-10">{preset.description}</p>
+                    
+                    <div 
+                      className="h-24 w-full rounded-md border shadow-sm flex flex-col items-center justify-center relative overflow-hidden" 
+                      style={{ backgroundColor: preset.bgColor }}
+                    >
+                      <div className="text-xs font-semibold mb-2" style={{ color: preset.textColor }}>
+                        Book Appointment
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="px-3 py-1.5 text-xs rounded-md shadow-sm font-medium" style={{ backgroundColor: preset.primaryColor, color: preset.bgColor }}>
+                          Primary
+                        </div>
+                        <div className="px-3 py-1.5 text-xs rounded-md shadow-sm font-medium" style={{ backgroundColor: preset.secondaryColor, color: preset.bgColor }}>
+                          Secondary
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </>
+
+              {/* Hidden inputs to submit the actual colors to the server action */}
+              <input type="hidden" name="primaryColor" value={selectedTheme === "Custom" ? initialState.tenant?.primaryColor : BRANDING_PRESETS[selectedTheme]?.primaryColor} />
+              <input type="hidden" name="secondaryColor" value={selectedTheme === "Custom" ? initialState.tenant?.secondaryColor : BRANDING_PRESETS[selectedTheme]?.secondaryColor} />
+              <input type="hidden" name="bgColor" value={selectedTheme === "Custom" ? initialState.tenant?.bgColor : BRANDING_PRESETS[selectedTheme]?.bgColor} />
+              <input type="hidden" name="textColor" value={selectedTheme === "Custom" ? initialState.tenant?.textColor : BRANDING_PRESETS[selectedTheme]?.textColor} />
+            </div>
           )}
 
           {step === 4 && (
