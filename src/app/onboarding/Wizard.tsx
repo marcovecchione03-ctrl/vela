@@ -280,14 +280,14 @@ export default function OnboardingWizard({ initialState }: { initialState: Recor
             <>
               <div className="space-y-2">
                 <Label>Booking Approval Mode</Label>
-                <Select name="bookingApprovalMode" defaultValue="AUTOMATIC">
+                <Select name="bookingApprovalMode" defaultValue={initialState.tenant?.bookingApprovalMode || "AUTOMATIC"}>
                   <option value="AUTOMATIC">Automatically confirm</option>
                   <option value="MANUAL">Require approval</option>
                 </Select>
               </div>
               <div className="space-y-2 mt-4">
                 <Label>Cancellation Deadline (Hours before)</Label>
-                <Input type="number" name="cancellationDeadlineHours" defaultValue="24" />
+                <Input type="number" name="cancellationDeadlineHours" defaultValue={initialState.tenant?.cancellationDeadlineHours ?? 24} />
               </div>
             </>
           )}

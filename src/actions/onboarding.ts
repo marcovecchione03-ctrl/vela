@@ -30,13 +30,15 @@ const step6Schema = z.object({
     endTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format")
   })).refine(rules => rules.every(r => r.endTime > r.startTime), "End time must be after start time")
 })
+const parseNum = (fallback?: number) => (val: unknown) => {
+  if (val === undefined || val === null || val === "") return fallback;
+  const num = Number(val);
+  return isNaN(num) ? fallback : num;
+};
+
 const step7Schema = z.object({
   bookingApprovalMode: z.enum(["AUTOMATIC", "MANUAL"]),
-  cancellationDeadlineHours: z.coerce.number().min(0),
-  maxAdvanceBookingDays: z.coerce.number().min(1),
-  minBookingNoticeHours: z.coerce.number().min(0),
-  defaultBookingBufferMins: z.coerce.number().min(0),
-  allowCustomerOverlaps: z.boolean()
+  cancellationDeadlineHours: z.preprocess(parseNum(), z.number().min(0)),
 })
 const step8Schema = z.object({ showPrices: z.boolean() })
 const step9Schema = z.object({ defaultLocale: z.string().min(1), currency: z.string().min(3), timezone: z.string().min(1) })
@@ -203,8 +205,7 @@ export async function submitOnboardingStep(step: number, formData: FormData) {
     }
 
     if (step === 7) {
-      const allowCustomerOverlaps = rawData.allowCustomerOverlaps === "on"
-      const parsed = step7Schema.safeParse({ ...rawData, allowCustomerOverlaps })
+      const parsed = step7Schema.safeParse(rawData)
       if (!parsed.success) return { error: parsed.error.issues[0].message }
 
       const res = await prisma.tenant.updateMany({
