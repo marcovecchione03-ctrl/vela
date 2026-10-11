@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth/config"
 import { prisma } from "@/lib/db/prisma"
 import { getStripeClient } from "@/lib/billing/stripe"
 import { PLANS, PlanName, BillingInterval } from "@/lib/billing/plans"
+import { getStripePriceId } from "@/lib/billing/stripe-prices"
 import { env } from "@/lib/env"
 import { headers } from "next/headers"
 
@@ -30,7 +31,7 @@ export async function createCheckoutSession(
   const planConfig = PLANS[plan]
   if (!planConfig) throw new Error("Invalid plan")
 
-  const priceId = planConfig.pricing[interval].priceId
+  const priceId = getStripePriceId(plan, interval)
   if (!priceId) throw new Error("Missing price ID for plan")
 
   // Find or create customer
@@ -153,7 +154,7 @@ export async function changePlan(tenantId: string, newPlan: PlanName, newInterva
     throw new Error(`Cannot downgrade to BASIC. You have ${tenant._count.locations} active locations. Limit is ${planConfig.locationLimit}. Please remove locations first.`)
   }
 
-  const newPriceId = planConfig.pricing[newInterval].priceId
+  const newPriceId = getStripePriceId(newPlan, newInterval)
   if (!newPriceId) throw new Error("Invalid price ID configuration")
 
   const stripe = getStripeClient();

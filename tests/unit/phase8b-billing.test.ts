@@ -14,15 +14,15 @@ vi.mock('../../src/lib/env', () => ({
   }
 }))
 
-import { PLANS, getPlanByPriceId } from '../../src/lib/billing/plans'
+import { PLANS } from '../../src/lib/billing/plans'
 import { mapStripeStatusToInternal } from '../../src/lib/billing/reconcile'
 
 describe('Phase 8B: Final Stripe Billing Hardening', () => {
   it('1-4. Exact plan configuration pricing', () => {
-    expect(PLANS.BASIC.pricing.month.amount).toBe(2999)
-    expect(PLANS.BASIC.pricing.year.amount).toBe(28790)
-    expect(PLANS.PRO.pricing.month.amount).toBe(5999)
-    expect(PLANS.PRO.pricing.year.amount).toBe(57590)
+    expect(PLANS.BASIC.monthlyAmountCents).toBe(2999)
+    expect(PLANS.BASIC.annualAmountCents).toBe(28790)
+    expect(PLANS.PRO.monthlyAmountCents).toBe(5999)
+    expect(PLANS.PRO.annualAmountCents).toBe(57590)
   })
 
   it('5-6. Exact location limits', () => {

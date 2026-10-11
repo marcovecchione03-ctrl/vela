@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db/prisma"
 import { getStripeClient, isStripeConfigured } from "@/lib/billing/stripe"
-import { getPlanByPriceId, BillingInterval, PlanName } from "@/lib/billing/plans"
+import { BillingInterval, PlanName } from "@/lib/billing/plans"
+import { getPlanByPriceId } from "@/lib/billing/stripe-prices"
 import { createAuditLog } from "@/lib/audit"
 
 export async function reconcileSubscription(tenantId: string) {

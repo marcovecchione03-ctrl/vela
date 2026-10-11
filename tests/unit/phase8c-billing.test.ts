@@ -20,10 +20,10 @@ import { mapStripeStatusToInternal } from '../../src/lib/billing/reconcile'
 
 describe('Phase 8C: Final Comprehensive Stripe Audit Suite', () => {
   describe('PLAN / ENTITLEMENT', () => {
-    it('1. Basic monthly = 2999', () => expect(PLANS.BASIC.pricing.month.amount).toBe(2999))
-    it('2. Basic annual = 28790', () => expect(PLANS.BASIC.pricing.year.amount).toBe(28790))
-    it('3. Pro monthly = 5999', () => expect(PLANS.PRO.pricing.month.amount).toBe(5999))
-    it('4. Pro annual = 57590', () => expect(PLANS.PRO.pricing.year.amount).toBe(57590))
+    it('1. Basic monthly = 2999', () => expect(PLANS.BASIC.monthlyAmountCents).toBe(2999))
+    it('2. Basic annual = 28790', () => expect(PLANS.BASIC.annualAmountCents).toBe(28790))
+    it('3. Pro monthly = 5999', () => expect(PLANS.PRO.monthlyAmountCents).toBe(5999))
+    it('4. Pro annual = 57590', () => expect(PLANS.PRO.annualAmountCents).toBe(57590))
     it('5. Basic location limit = 1', () => expect(PLANS.BASIC.locationLimit).toBe(1))
     it('6. Pro location limit = 3', () => expect(PLANS.PRO.locationLimit).toBe(3))
     it('7. ACTIVE has normal entitlement', () => expect(mapStripeStatusToInternal('active')).toBe('ACTIVE'))

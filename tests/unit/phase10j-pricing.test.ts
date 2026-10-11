@@ -76,9 +76,8 @@ describe('Phase 10J - Onboarding Step 10 Annual Pricing Fix', () => {
     expect(wizardContent).toContain('annualPrice.toFixed(2)');
   });
 
-  it('O, P, Q, R. Checkout resolves Stripe price IDs correctly', () => {
-    expect(actionContent).toContain('const planConfig = PLANS[plan]');
-    expect(actionContent).toContain('const priceId = planConfig.pricing[interval].priceId');
+  it('O, P, Q, R. Checkout resolves Stripe price IDs correctly via server module', () => {
+    expect(actionContent).toContain('const priceId = getStripePriceId(plan, interval)');
   });
 
   it('S. Finish & Setup submits the currently selected billing interval', () => {
@@ -92,5 +91,16 @@ describe('Phase 10J - Onboarding Step 10 Annual Pricing Fix', () => {
   it('T. no hardcoded duplicated price branches exist', () => {
     // Ensuring the loop maps over PLANS
     expect(wizardContent).toContain('(["BASIC", "PRO"] as PlanName[]).map((planName)');
+  });
+
+  // REGRESSION TESTS for 4J-B & 4J-C Client Runtime Crash & Architecture
+  it('U. plans.ts does not access process.env (completely safe for client)', () => {
+    expect(plansContent).not.toContain('import { env } from "@/lib/env"');
+    expect(plansContent).not.toContain('process.env');
+  });
+
+  it('V. Wizard initial states are valid supported strings', () => {
+    expect(wizardContent).toContain('useState<BillingInterval>("month")');
+    expect(wizardContent).toContain('useState<PlanName>("BASIC")');
   });
 });
