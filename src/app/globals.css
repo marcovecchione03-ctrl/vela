@@ -3,11 +3,39 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Vela Semantic Theme Tokens Default */
+  --vela-primary: #171717;
+  --vela-primary-foreground: #ffffff;
+  --vela-secondary: #737373;
+  --vela-secondary-foreground: #ffffff;
+  --vela-background: #ffffff;
+  --vela-foreground: #171717;
+  --vela-surface: #ffffff;
+  --vela-surface-subtle: #f5f5f5;
+  --vela-border: rgba(23, 23, 23, 0.12);
+  --vela-border-muted: rgba(23, 23, 23, 0.06);
+  --vela-muted: rgba(23, 23, 23, 0.03);
+  --vela-muted-foreground: rgba(23, 23, 23, 0.62);
+  --vela-focus: rgba(23, 23, 23, 0.35);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-vela-primary: var(--vela-primary);
+  --color-vela-primary-foreground: var(--vela-primary-foreground);
+  --color-vela-secondary: var(--vela-secondary);
+  --color-vela-secondary-foreground: var(--vela-secondary-foreground);
+  --color-vela-background: var(--vela-background);
+  --color-vela-foreground: var(--vela-foreground);
+  --color-vela-surface: var(--vela-surface);
+  --color-vela-surface-subtle: var(--vela-surface-subtle);
+  --color-vela-border: var(--vela-border);
+  --color-vela-border-muted: var(--vela-border-muted);
+  --color-vela-muted: var(--vela-muted);
+  --color-vela-muted-foreground: var(--vela-muted-foreground);
+  --color-vela-focus: var(--vela-focus);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
