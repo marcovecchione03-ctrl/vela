@@ -48,7 +48,7 @@ const step10Schema = z.object({
 async function getOwnerTenant(userId: string) {
   const membership = await prisma.tenantMembership.findFirst({
     where: { userId, role: "OWNER" },
-    include: { tenant: true }
+    include: { tenant: { include: { locations: true } } }
   })
   return membership?.tenant || null
 }

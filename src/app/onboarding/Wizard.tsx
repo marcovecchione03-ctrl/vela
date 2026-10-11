@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { submitOnboardingStep } from "@/actions/onboarding"
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,7 @@ import { Select } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { BRANDING_PRESETS } from "@/modules/tenant/presets"
 import { useFormStatus } from "react-dom"
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete"
 
 function SubmitButton({ step, isBackDisabled, onBack }: { step: number, isBackDisabled: boolean, onBack: () => void }) {
   const { pending } = useFormStatus()
@@ -56,6 +57,22 @@ export default function OnboardingWizard({ initialState }: { initialState: Recor
   }, [initialState.tenant])
 
   const [selectedTheme, setSelectedTheme] = useState<string>(initialTheme)
+  const [clientTimezone, setClientTimezone] = useState<string>(
+    initialState.tenant?.locations?.[0]?.timezone || ""
+  )
+
+  useEffect(() => {
+    if (!clientTimezone) {
+      try {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setClientTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC")
+      } catch (err) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setClientTimezone("UTC") // safe generic fallback
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
 
   async function handleAction(formData: FormData) {
@@ -233,11 +250,11 @@ export default function OnboardingWizard({ initialState }: { initialState: Recor
             <>
               <div className="space-y-2">
                 <Label>Location Name</Label>
-                <Input name="locationName" required defaultValue="Main Shop" />
+                <Input name="locationName" required defaultValue={initialState.tenant?.locations?.[0]?.name || "Main Shop"} />
               </div>
               <div className="space-y-2">
                 <Label>Street Address</Label>
-                <Input name="address" required />
+                <AddressAutocomplete name="address" required defaultValue={initialState.tenant?.locations?.[0]?.address || ""} />
               </div>
             </>
           )}
@@ -330,6 +347,7 @@ export default function OnboardingWizard({ initialState }: { initialState: Recor
             </div>
           )}
 
+          {clientTimezone && <input type="hidden" name="timezone" value={clientTimezone} />}
           {error && <div className="text-sm text-red-500">{error}</div>}
         </CardContent>
         <SubmitButton step={step} isBackDisabled={step === 1} onBack={() => setStep(step - 1)} />

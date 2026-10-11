@@ -16,6 +16,7 @@ const envSchema = z.object({
   CRON_SECRET: z.string().min(1),
   ALLOW_DEV_BILLING_BYPASS: z.string().optional(),
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().optional(),
+  NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: z.string().optional(),
   
   // Phase 9: Calendar & Notifications
   CALENDAR_ENCRYPTION_KEY: z.string().length(32, "Encryption key must be 32 chars for AES-256-GCM").default("12345678901234567890123456789012"),
