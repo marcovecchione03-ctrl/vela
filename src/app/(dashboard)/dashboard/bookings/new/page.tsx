@@ -4,16 +4,15 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth/config"
 import Link from "next/link"
 import ManualBookingForm from "./ManualBookingForm"
+import { getDashboardTenant } from "@/lib/tenant/context"
 
-export default async function DashboardNewBookingPage({ 
-  params 
-}: { 
-  params: Promise<{ domain: string }> 
-}) {
-  const { domain } = await params;
+export default async function DashboardNewBookingPage() {
+  const baseTenant = await getDashboardTenant()
+  if (!baseTenant) notFound()
 
-  let tenant = await prisma.tenant.findUnique({
-    where: { slug: domain },
+  // We need to fetch the tenant with relations
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: baseTenant.id },
     include: {
       locations: true,
       services: { where: { isActive: true } },
@@ -24,24 +23,10 @@ export default async function DashboardNewBookingPage({
       }
     }
   })
-  if (!tenant && domain.length === 36) {
-    tenant = await prisma.tenant.findUnique({ 
-      where: { id: domain },
-      include: {
-        locations: true,
-        services: { where: { isActive: true } },
-        employees: { where: { isActive: true } },
-        customers: { 
-          orderBy: { firstName: 'asc' },
-          select: { id: true, firstName: true, lastName: true, phone: true } 
-        }
-      }
-    })
-  }
   if (!tenant) notFound()
 
   const session = await getServerSession(authOptions)
-  if (!session?.user?.id) redirect(`/api/auth/signin?callbackUrl=/${domain}/dashboard/bookings/new`)
+  if (!session?.user?.id) redirect(`/api/auth/signin?callbackUrl=/dashboard/bookings/new`)
 
   const membership = await prisma.tenantMembership.findUnique({
     where: { tenantId_userId: { tenantId: tenant.id, userId: session.user.id } },
@@ -49,7 +34,7 @@ export default async function DashboardNewBookingPage({
   })
 
   if (!membership || !["OWNER", "ADMIN", "EMPLOYEE"].includes(membership.role)) {
-    redirect(`/${domain}`)
+    redirect(`/dashboard`)
   }
 
   const role = membership.role
@@ -57,7 +42,7 @@ export default async function DashboardNewBookingPage({
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <Link href={`/${domain}/dashboard/bookings`} className="text-blue-600 hover:underline text-sm font-medium">
+      <Link href={`/dashboard/bookings`} className="text-blue-600 hover:underline text-sm font-medium">
         &larr; Back to Bookings
       </Link>
 

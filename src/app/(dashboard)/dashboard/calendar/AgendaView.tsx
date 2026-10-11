@@ -78,7 +78,7 @@ export default function AgendaView({ date, bookings, timeBlocks, exceptions, dom
             const b = item.data
             return (
               <Link 
-                href={`/${domain}/dashboard/bookings/${b.id}`}
+                href={`/dashboard/bookings/${b.id}`}
                 key={`b-${b.id}`} 
                 className="flex flex-col md:flex-row md:items-center gap-4 p-4 rounded-xl border bg-white shadow-sm hover:border-blue-300 hover:shadow transition"
               >

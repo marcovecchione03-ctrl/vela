@@ -102,7 +102,7 @@ export default function DayView({ date, bookings, timeBlocks, exceptions, employ
                   
                   return (
                     <Link 
-                      href={`/${domain}/dashboard/bookings/${b.id}`}
+                      href={`/dashboard/bookings/${b.id}`}
                       key={b.id} 
                       className={`absolute left-1 right-1 p-2 rounded shadow-sm overflow-hidden text-xs transition hover:brightness-95 border ${
                         b.status === "PENDING" ? "bg-yellow-100 border-yellow-200 text-yellow-900" :

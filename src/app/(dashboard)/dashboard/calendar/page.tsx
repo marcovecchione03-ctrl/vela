@@ -1,34 +1,30 @@
 import { prisma } from "@/lib/db/prisma"
 import { notFound, redirect } from "next/navigation"
+import { getDashboardTenant } from "@/lib/tenant/context"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth/config"
 import CalendarWrapper from "./CalendarWrapper"
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfDay, endOfDay, addDays } from "date-fns"
 
 export default async function DashboardCalendarPage({ 
-  params,
   searchParams
 }: { 
-  params: Promise<{ domain: string }>
   searchParams: Promise<{ view?: string, date?: string }>
 }) {
-  const { domain } = await params;
   const { view = "WEEK", date } = await searchParams;
 
-  let tenant = await prisma.tenant.findUnique({
-    where: { slug: domain },
-    include: { employees: { where: { isActive: true } } }
-  })
-  if (!tenant && domain.length === 36) {
-    tenant = await prisma.tenant.findUnique({ 
-      where: { id: domain },
-      include: { employees: { where: { isActive: true } } }
-    })
-  }
+  const tenant = await getDashboardTenant()
   if (!tenant) notFound()
 
+  // We need to fetch the tenant with employees
+  const tenantWithEmployees = await prisma.tenant.findUnique({
+    where: { id: tenant.id },
+    include: { employees: { where: { isActive: true } } }
+  })
+  if (!tenantWithEmployees) notFound()
+
   const session = await getServerSession(authOptions)
-  if (!session?.user?.id) redirect(`/api/auth/signin?callbackUrl=/${domain}/dashboard/calendar`)
+  if (!session?.user?.id) redirect(`/api/auth/signin?callbackUrl=/dashboard/calendar`)
 
   const membership = await prisma.tenantMembership.findUnique({
     where: { tenantId_userId: { tenantId: tenant.id, userId: session.user.id } },
@@ -36,7 +32,7 @@ export default async function DashboardCalendarPage({
   })
 
   if (!membership || !["OWNER", "ADMIN", "EMPLOYEE"].includes(membership.role)) {
-    redirect(`/${domain}`)
+    redirect(`/dashboard`)
   }
 
   const role = membership.role
@@ -101,14 +97,14 @@ export default async function DashboardCalendarPage({
   return (
     <div className="h-[calc(100vh-80px)] min-h-[600px] flex flex-col bg-white rounded-xl shadow border">
       <CalendarWrapper 
-        domain={domain}
+       
         tenantId={tenant.id}
         initialView={view}
         initialDate={referenceDate.toISOString()}
         bookings={bookings}
         timeBlocks={timeBlocks}
         exceptions={exceptions}
-        employees={tenant.employees}
+        employees={tenantWithEmployees.employees}
         role={role}
         employeeId={employeeId}
       />

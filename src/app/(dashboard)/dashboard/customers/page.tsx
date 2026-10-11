@@ -1,25 +1,22 @@
 import { requireRole } from "@/lib/auth/rbac"
 import { prisma } from "@/lib/db/prisma"
-import { getTenantFromDomain } from "@/lib/tenant/context"
+import { getDashboardTenant } from "@/lib/tenant/context"
 import { notFound } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getScoreBand } from "@/lib/crm/customer-score"
 import Link from "next/link"
 
 export default async function CustomersDirectoryPage({
-  params,
   searchParams
 }: {
-  params: Promise<{ domain: string }>
   searchParams: Promise<{ search?: string; page?: string; filter?: string; tag?: string }>
 }) {
-  const resolvedParams = await params;
   const resolvedSearchParams = await searchParams;
-  const tenant = await getTenantFromDomain(resolvedParams.domain)
+  const tenant = await getDashboardTenant()
   if (!tenant) notFound()
 
   // Strict RBAC: Only OWNER and ADMIN
-  const { role } = await requireRole(tenant, ["OWNER", "ADMIN"])
+  const { role } = await requireRole(tenant.id, ["OWNER", "ADMIN"])
 
   const search = resolvedSearchParams.search || ""
   const page = parseInt(resolvedSearchParams.page || "1", 10)
@@ -30,7 +27,7 @@ export default async function CustomersDirectoryPage({
   const tagFilter = resolvedSearchParams.tag || ""
   
   const whereClause: any = {
-    tenantId: tenant
+    tenantId: tenant.id
   }
 
   if (search) {
@@ -120,7 +117,7 @@ export default async function CustomersDirectoryPage({
       skip,
       take: pageSize
     }),
-    prisma.customerTag.findMany({ where: { tenantId: tenant }, select: { name: true } })
+    prisma.customerTag.findMany({ where: { tenantId: tenant.id }, select: { name: true } })
   ])
 
   const totalPages = Math.ceil(totalCustomers / pageSize)
@@ -132,7 +129,7 @@ export default async function CustomersDirectoryPage({
           <h1 className="text-3xl font-bold">Customers</h1>
           <p className="text-gray-500">Manage your CRM and view reliability scores.</p>
         </div>
-        <Link href={`/${resolvedParams.domain}/dashboard/customers/export`} className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700">
+        <Link href={`/dashboard/customers/export`} className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700">
           Export CSV
         </Link>
       </div>
@@ -174,7 +171,7 @@ export default async function CustomersDirectoryPage({
               Filter
             </button>
             {(search || filter !== "ALL" || tagFilter) && (
-              <Link href={`/${resolvedParams.domain}/dashboard/customers`} className="bg-gray-200 text-gray-800 px-4 py-2 rounded">
+              <Link href={`/dashboard/customers`} className="bg-gray-200 text-gray-800 px-4 py-2 rounded">
                 Clear
               </Link>
             )}
@@ -200,7 +197,7 @@ export default async function CustomersDirectoryPage({
                   return (
                     <tr key={c.id} className="border-b hover:bg-gray-50">
                       <td className="p-3">
-                        <Link href={`/${resolvedParams.domain}/dashboard/customers/${c.id}`} className="font-medium text-blue-600 hover:underline">
+                        <Link href={`/dashboard/customers/${c.id}`} className="font-medium text-blue-600 hover:underline">
                           {c.firstName} {c.lastName}
                         </Link>
                       </td>
@@ -228,7 +225,7 @@ export default async function CustomersDirectoryPage({
                         )}
                       </td>
                       <td className="p-3 text-right">
-                        <Link href={`/${resolvedParams.domain}/dashboard/customers/${c.id}`} className="text-sm text-gray-500 hover:text-black">
+                        <Link href={`/dashboard/customers/${c.id}`} className="text-sm text-gray-500 hover:text-black">
                           View
                         </Link>
                       </td>
@@ -252,7 +249,7 @@ export default async function CustomersDirectoryPage({
               {Array.from({ length: totalPages }).map((_, i) => (
                 <Link
                   key={i}
-                  href={`/${resolvedParams.domain}/dashboard/customers?page=${i + 1}${search ? `&search=${search}` : ""}`}
+                  href={`/dashboard/customers?page=${i + 1}${search ? `&search=${search}` : ""}`}
                   className={`px-3 py-1 rounded ${page === i + 1 ? 'bg-black text-white' : 'bg-gray-200 text-black hover:bg-gray-300'}`}
                 >
                   {i + 1}

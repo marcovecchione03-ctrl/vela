@@ -6,24 +6,20 @@ import Link from "next/link"
 import { format } from "date-fns"
 import BookingStatusActions from "../BookingStatusActions"
 import InternalNotes from "./InternalNotes"
+import { getDashboardTenant } from "@/lib/tenant/context"
 
 export default async function DashboardBookingDetailPage({ 
   params 
 }: { 
-  params: Promise<{ domain: string, id: string }> 
+  params: Promise<{ id: string }> 
 }) {
-  const { domain, id } = await params;
+  const { id } = await params;
 
-  let tenant = await prisma.tenant.findUnique({
-    where: { slug: domain }
-  })
-  if (!tenant && domain.length === 36) {
-    tenant = await prisma.tenant.findUnique({ where: { id: domain } })
-  }
+  const tenant = await getDashboardTenant()
   if (!tenant) notFound()
 
   const session = await getServerSession(authOptions)
-  if (!session?.user?.id) redirect(`/api/auth/signin?callbackUrl=/${domain}/dashboard/bookings/${id}`)
+  if (!session?.user?.id) redirect(`/api/auth/signin?callbackUrl=/dashboard/bookings/${id}`)
 
   const membership = await prisma.tenantMembership.findUnique({
     where: { tenantId_userId: { tenantId: tenant.id, userId: session.user.id } },
@@ -31,13 +27,13 @@ export default async function DashboardBookingDetailPage({
   })
 
   if (!membership || !["OWNER", "ADMIN", "EMPLOYEE"].includes(membership.role)) {
-    redirect(`/${domain}`)
+    redirect(`/dashboard`)
   }
 
   const role = membership.role
   const employeeId = membership.employeeProfile?.id
 
-  const booking = await prisma.booking.findUnique({
+  const booking = await prisma.booking.findFirst({
     where: { id: id, tenantId: tenant.id },
     include: {
       services: { include: { service: true } },
@@ -53,7 +49,7 @@ export default async function DashboardBookingDetailPage({
   if (!booking) notFound()
 
   if (role === "EMPLOYEE" && booking.employeeId !== employeeId) {
-    redirect(`/${domain}/dashboard/bookings`)
+    redirect(`/dashboard/bookings`)
   }
 
   const clientName = booking.customer 
@@ -64,7 +60,7 @@ export default async function DashboardBookingDetailPage({
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <Link href={`/${domain}/dashboard/bookings`} className="text-blue-600 hover:underline text-sm font-medium">
+      <Link href={`/dashboard/bookings`} className="text-blue-600 hover:underline text-sm font-medium">
         &larr; Back to Bookings
       </Link>
 

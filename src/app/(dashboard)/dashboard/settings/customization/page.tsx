@@ -7,28 +7,30 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 
+import { getDashboardTenant } from "@/lib/tenant/context"
+import { requireOwnerOrAdmin } from "@/lib/auth/rbac"
+
 export default async function CustomizationPage() {
-  const session = await getServerSession(authOptions)
-  if (!session?.user?.id) redirect("/auth/login")
+  const tenant = await getDashboardTenant()
+  if (!tenant) redirect("/auth/login")
 
-  const membership = await prisma.tenantMembership.findFirst({
-    where: { userId: session.user.id, role: { in: ["OWNER", "ADMIN"] } },
-    include: { tenant: true }
-  })
-
-  if (!membership) redirect("/onboarding")
-  const tenant = membership.tenant
+  try {
+    await requireOwnerOrAdmin(tenant.id)
+  } catch (e) {
+    redirect("/onboarding")
+  }
 
   async function updateCustomization(formData: FormData) {
     "use server"
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) return
     
-    // Check permission again
-    const m = await prisma.tenantMembership.findFirst({
-      where: { userId: session.user.id, role: { in: ["OWNER", "ADMIN"] }, tenantId: tenant.id }
-    })
-    if (!m) return
+    try {
+      if (!tenant) return
+      await requireOwnerOrAdmin(tenant.id)
+    } catch (e) {
+      return
+    }
 
     await prisma.tenant.update({
       where: { id: tenant.id },

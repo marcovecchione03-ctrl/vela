@@ -92,7 +92,7 @@ export default function CalendarWrapper({
             ))}
           </div>
           <Link 
-            href={`/${domain}/dashboard/bookings/new`}
+            href={`/dashboard/bookings/new`}
             className="px-4 py-2 bg-black text-white rounded font-medium text-sm shadow hover:bg-gray-800"
           >
             + New
@@ -102,10 +102,10 @@ export default function CalendarWrapper({
 
       {/* Calendar Body Area */}
       <div className="flex-1 overflow-auto bg-white relative">
-        {view === "DAY" && <DayView date={currentDate} bookings={bookings} timeBlocks={timeBlocks} exceptions={exceptions} employees={employees} role={role} employeeId={employeeId} domain={domain} />}
-        {view === "WEEK" && <WeekView date={currentDate} bookings={bookings} timeBlocks={timeBlocks} exceptions={exceptions} employees={employees} role={role} employeeId={employeeId} domain={domain} />}
-        {view === "MONTH" && <MonthView date={currentDate} bookings={bookings} timeBlocks={timeBlocks} exceptions={exceptions} domain={domain} />}
-        {view === "AGENDA" && <AgendaView date={currentDate} bookings={bookings} timeBlocks={timeBlocks} exceptions={exceptions} domain={domain} />}
+        {view === "DAY" && <DayView date={currentDate} bookings={bookings} timeBlocks={timeBlocks} exceptions={exceptions} employees={employees} role={role} employeeId={employeeId} />}
+        {view === "WEEK" && <WeekView date={currentDate} bookings={bookings} timeBlocks={timeBlocks} exceptions={exceptions} employees={employees} role={role} employeeId={employeeId} />}
+        {view === "MONTH" && <MonthView date={currentDate} bookings={bookings} timeBlocks={timeBlocks} exceptions={exceptions} />}
+        {view === "AGENDA" && <AgendaView date={currentDate} bookings={bookings} timeBlocks={timeBlocks} exceptions={exceptions} />}
       </div>
     </div>
   )

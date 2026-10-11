@@ -4,16 +4,16 @@ import { prisma } from "@/lib/db/prisma"
 import { redirect } from "next/navigation"
 import { DomainsClient } from "./domains-client"
 
+import { getDashboardTenant } from "@/lib/tenant/context"
+import { requireOwner } from "@/lib/auth/rbac"
+
 export default async function DomainsPage() {
-  const session = await getServerSession(authOptions)
-  if (!session?.user?.id) redirect("/auth/login")
+  const tenant = await getDashboardTenant()
+  if (!tenant) redirect("/auth/login")
 
-  const membership = await prisma.tenantMembership.findFirst({
-    where: { userId: session.user.id, role: "OWNER" },
-    include: { tenant: true }
-  })
-
-  if (!membership) {
+  try {
+    await requireOwner(tenant.id)
+  } catch (e) {
     return (
       <div className="p-6">
         <h1 className="text-2xl font-bold text-red-600">Access Denied</h1>
@@ -22,7 +22,6 @@ export default async function DomainsPage() {
     )
   }
 
-  const tenant = membership.tenant
   const domains = await prisma.domain.findMany({
     where: { tenantId: tenant.id },
     orderBy: { createdAt: 'desc' }

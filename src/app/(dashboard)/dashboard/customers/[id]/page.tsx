@@ -1,6 +1,6 @@
 import { requireRole } from "@/lib/auth/rbac"
 import { prisma } from "@/lib/db/prisma"
-import { getTenantFromDomain } from "@/lib/tenant/context"
+import { getDashboardTenant } from "@/lib/tenant/context"
 import { notFound } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getScoreBand } from "@/lib/crm/customer-score"
@@ -9,16 +9,16 @@ import Link from "next/link"
 export default async function CustomerDetailPage({
   params
 }: {
-  params: Promise<{ domain: string, id: string }>
+  params: Promise<{ id: string }>
 }) {
   const resolvedParams = await params;
-  const tenant = await getTenantFromDomain(resolvedParams.domain)
+  const tenant = await getDashboardTenant()
   if (!tenant) notFound()
 
-  const { role } = await requireRole(tenant, ["OWNER", "ADMIN"])
+  const { role } = await requireRole(tenant.id, ["OWNER", "ADMIN"])
 
-  const customer = await prisma.customerProfile.findUnique({
-    where: { id: resolvedParams.id, tenantId: tenant },
+  const customer = await prisma.customerProfile.findFirst({
+    where: { id: resolvedParams.id, tenantId: tenant.id },
     include: {
       tenantMembership: { include: { user: true } },
       tags: { include: { tag: true } },
@@ -99,7 +99,7 @@ export default async function CustomerDetailPage({
   return (
     <div className="space-y-6">
       <div>
-        <Link href={`/${resolvedParams.domain}/dashboard/customers`} className="text-sm text-blue-600 hover:underline mb-2 block">
+        <Link href={`/dashboard/customers`} className="text-sm text-blue-600 hover:underline mb-2 block">
           &larr; Back to Customers
         </Link>
         <h1 className="text-3xl font-bold">{customer.firstName} {customer.lastName}</h1>

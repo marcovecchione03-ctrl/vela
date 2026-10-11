@@ -1,32 +1,28 @@
 import { requireOwner } from "@/lib/auth/rbac"
 import { prisma } from "@/lib/db/prisma"
+import { getDashboardTenant } from "@/lib/tenant/context"
 import { notFound, redirect } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { PLANS } from "@/lib/billing/plans"
 import { ManageBillingButton } from "@/components/billing/ManageBillingButton"
 import { AlertCircle } from "lucide-react"
 
-export default async function SubscriptionPage({ params }: { params: Promise<{ domain: string }> }) {
-  const { domain } = await params
-  
+export default async function SubscriptionPage() {
+  const baseTenant = await getDashboardTenant()
+  if (!baseTenant) notFound()
+
   // Enforce OWNER only
   let membership
   try {
-    membership = await requireOwner(domain)
+    membership = await requireOwner(baseTenant.id)
   } catch (err) {
-    redirect(`/${domain}/dashboard`)
+    redirect(`/dashboard`)
   }
 
-  let tenant = await prisma.tenant.findUnique({
-    where: { slug: domain },
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: baseTenant.id },
     include: { subscription: true, _count: { select: { locations: true } } }
   })
-  if (!tenant && domain.length === 36) {
-    tenant = await prisma.tenant.findUnique({
-      where: { id: domain },
-      include: { subscription: true, _count: { select: { locations: true } } }
-    })
-  }
 
   if (!tenant || !tenant.subscription) return notFound()
 

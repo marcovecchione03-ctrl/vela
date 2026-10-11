@@ -29,7 +29,7 @@ export default async function TenantHomepage({ params }: { params: Promise<{ dom
         <p className="text-gray-500 max-w-md mx-auto mb-6">
           This booking page is currently suspended. If you are the owner, please sign in and navigate to your dashboard to update your billing information.
         </p>
-        <a href={`/${domain}/dashboard/subscription`} className="px-4 py-2 bg-gray-900 text-white rounded-md font-medium">
+        <a href={`/dashboard/subscription`} className="px-4 py-2 bg-gray-900 text-white rounded-md font-medium">
           Manage Subscription
         </a>
       </div>

@@ -97,7 +97,7 @@ export default function WeekView({ date, bookings, timeBlocks, exceptions, emplo
 
                   return (
                     <Link 
-                      href={`/${domain}/dashboard/bookings/${b.id}`}
+                      href={`/dashboard/bookings/${b.id}`}
                       key={b.id} 
                       className={`absolute left-1 right-1 p-1 rounded shadow-sm overflow-hidden text-xs transition hover:brightness-95 border ${
                         b.status === "PENDING" ? "bg-yellow-100 border-yellow-200 text-yellow-900" :

@@ -70,7 +70,7 @@ export default function OnboardingWizard({ initialState }: { initialState: Recor
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setClientTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC")
       } catch (err) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+         
         setClientTimezone("UTC") // safe generic fallback
       }
     }

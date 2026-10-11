@@ -56,7 +56,7 @@ export default function MonthView({ date, bookings, timeBlocks, exceptions, doma
                 ))}
                 {dayBookings.slice(0, 4 - dayExceptions.length - dayTimeBlocks.length).map((b: any) => (
                   <Link
-                    href={`/${domain}/dashboard/bookings/${b.id}`}
+                    href={`/dashboard/bookings/${b.id}`}
                     key={b.id}
                     className={`block px-1 py-0.5 text-[10px] md:text-xs truncate rounded ${
                       b.status === "PENDING" ? "bg-yellow-100 text-yellow-900" :

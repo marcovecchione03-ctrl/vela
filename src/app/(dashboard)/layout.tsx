@@ -1,9 +1,9 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth/config"
 import { redirect } from "next/navigation"
-import { prisma } from "@/lib/db/prisma"
+import { getDashboardContext } from "@/lib/tenant/context"
 import Link from "next/link"
-import { Calendar, Users, Briefcase, MapPin, Settings, BarChart, LogOut, LayoutDashboard, Palette } from "lucide-react"
+import { Calendar, Users, Briefcase, MapPin, Settings, BarChart, LogOut, LayoutDashboard, Palette, CreditCard } from "lucide-react"
 import { ImpersonationBanner } from "@/components/admin/ImpersonationBanner"
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -13,22 +13,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect("/auth/login")
   }
 
-  // Get Owner's or Admin's Tenant
-  const membership = await prisma.tenantMembership.findFirst({
-    where: { userId: session.user.id, role: { in: ["OWNER", "ADMIN"] } },
-    include: { tenant: true }
-  })
-
-  if (!membership) {
+  const context = await getDashboardContext()
+  if (!context) {
     redirect("/onboarding")
   }
 
-  const tenant = membership.tenant
-  if (tenant.onboardingState !== "COMPLETED") {
+  const { tenant, role } = context
+  if (role === "OWNER" && tenant.onboardingState !== "COMPLETED") {
     redirect("/onboarding")
   }
 
-  const isOwner = membership.role === "OWNER"
+  const isOwner = role === "OWNER"
+  const isStaff = role === "OWNER" || role === "ADMIN"
 
   return (
     <div className="flex flex-col h-screen bg-neutral-50 overflow-hidden">
@@ -45,16 +41,25 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <NavLink href="/dashboard" icon={<LayoutDashboard className="w-4 h-4" />}>Overview</NavLink>
           <NavLink href="/dashboard/calendar" icon={<Calendar className="w-4 h-4" />}>Calendar</NavLink>
           <NavLink href="/dashboard/bookings" icon={<Briefcase className="w-4 h-4" />}>Bookings</NavLink>
-          <NavLink href="/dashboard/customers" icon={<Users className="w-4 h-4" />}>Customers</NavLink>
-          <NavLink href="/dashboard/locations" icon={<MapPin className="w-4 h-4" />}>Locations</NavLink>
-          <NavLink href="/dashboard/analytics" icon={<BarChart className="w-4 h-4" />}>Analytics</NavLink>
-          <div className="pt-4 mt-4 border-t border-neutral-200">
-            <p className="px-3 text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">Settings</p>
-            <NavLink href="/dashboard/settings/customization" icon={<Palette className="w-4 h-4" />}>Customization</NavLink>
-            {isOwner && (
-              <NavLink href="/dashboard/settings" icon={<Settings className="w-4 h-4" />}>Configuration</NavLink>
-            )}
-          </div>
+          {isStaff && (
+            <>
+              <NavLink href="/dashboard/customers" icon={<Users className="w-4 h-4" />}>Customers</NavLink>
+              <NavLink href="/dashboard/locations" icon={<MapPin className="w-4 h-4" />}>Locations</NavLink>
+              <NavLink href="/dashboard/analytics" icon={<BarChart className="w-4 h-4" />}>Analytics</NavLink>
+            </>
+          )}
+          {isStaff && (
+            <div className="pt-4 mt-4 border-t border-neutral-200">
+              <p className="px-3 text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">Settings</p>
+              <NavLink href="/dashboard/settings/customization" icon={<Palette className="w-4 h-4" />}>Customization</NavLink>
+              {isOwner && (
+                <>
+                  <NavLink href="/dashboard/settings" icon={<Settings className="w-4 h-4" />}>Configuration</NavLink>
+                  <NavLink href="/dashboard/subscription" icon={<CreditCard className="w-4 h-4" />}>Subscription</NavLink>
+                </>
+              )}
+            </div>
+          )}
         </nav>
 
         <div className="p-4 border-t border-neutral-200">

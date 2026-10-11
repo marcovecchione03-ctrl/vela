@@ -1,25 +1,22 @@
 import { requireRole } from "@/lib/auth/rbac"
 import { prisma } from "@/lib/db/prisma"
-import { getTenantFromDomain } from "@/lib/tenant/context"
+import { getDashboardTenant } from "@/lib/tenant/context"
 import { notFound } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
 import { validateCustomRange, classifyNewVsReturning } from "@/lib/logic/analytics"
 
 export default async function AnalyticsPage({
-  params,
   searchParams
 }: {
-  params: Promise<{ domain: string }>
   searchParams: Promise<{ range?: string; start?: string; end?: string }>
 }) {
-  const resolvedParams = await params;
   const resolvedSearchParams = await searchParams;
-  const tenant = await getTenantFromDomain(resolvedParams.domain)
+  const tenant = await getDashboardTenant()
   if (!tenant) notFound()
 
   // Strict RBAC: Only OWNER and ADMIN
-  const { role } = await requireRole(tenant, ["OWNER", "ADMIN"])
+  const { role } = await requireRole(tenant.id, ["OWNER", "ADMIN"])
 
   const range = resolvedSearchParams.range || "30d" // 7d, 30d, 3m, 12m, custom
   
@@ -43,7 +40,7 @@ export default async function AnalyticsPage({
 
   const bookings = await prisma.booking.findMany({
     where: {
-      tenantId: tenant,
+      tenantId: tenant.id,
       startTime: { gte: startDate, lte: endDate }
     },
     include: { services: true, employee: true }
@@ -107,7 +104,7 @@ export default async function AnalyticsPage({
     const earliestBookings = await prisma.booking.groupBy({
       by: ['customerId'],
       where: {
-        tenantId: tenant,
+        tenantId: tenant.id,
         customerId: { in: customerIdsArray }
       },
       _min: {
@@ -138,7 +135,7 @@ export default async function AnalyticsPage({
           {["7d", "30d", "3m", "12m"].map(r => (
             <Link 
               key={r} 
-              href={`/${resolvedParams.domain}/dashboard/analytics?range=${r}`}
+              href={`/dashboard/analytics?range=${r}`}
               className={`px-3 py-1 rounded text-sm ${range === r ? 'bg-black text-white' : 'bg-gray-200 text-gray-800'}`}
             >
               {r.toUpperCase()}
