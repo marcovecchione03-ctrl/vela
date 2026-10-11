@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { BRANDING_PRESETS } from "@/modules/tenant/presets"
 import { useFormStatus } from "react-dom"
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete"
+import { PLANS, type PlanName, type BillingInterval } from "@/lib/billing/plans"
 
 function SubmitButton({ step, isBackDisabled, onBack }: { step: number, isBackDisabled: boolean, onBack: () => void }) {
   const { pending } = useFormStatus()
@@ -60,6 +61,8 @@ export default function OnboardingWizard({ initialState }: { initialState: Recor
   const [clientTimezone, setClientTimezone] = useState<string>(
     initialState.tenant?.locations?.[0]?.timezone || ""
   )
+  const [billingInterval, setBillingInterval] = useState<BillingInterval>("month")
+  const [selectedPlan, setSelectedPlan] = useState<PlanName>("BASIC")
 
   useEffect(() => {
     if (!clientTimezone) {
@@ -319,30 +322,84 @@ export default function OnboardingWizard({ initialState }: { initialState: Recor
           )}
 
           {step === 10 && (
-            <div className="space-y-4">
-              <div className="flex justify-center space-x-4 mb-6">
-                <Label className="flex items-center space-x-2">
-                  <input type="radio" name="interval" value="month" defaultChecked />
-                  <span>Monthly billing</span>
-                </Label>
-                <Label className="flex items-center space-x-2">
-                  <input type="radio" name="interval" value="year" />
-                  <span>Annual billing (Save ~20%)</span>
-                </Label>
+            <div className="space-y-6">
+              <div className="flex flex-col items-center mb-6">
+                <div className="inline-flex rounded-md p-1 bg-neutral-100 border">
+                  <label className={`cursor-pointer px-4 py-2 rounded text-sm font-medium transition-colors ${billingInterval === "month" ? "bg-white shadow-sm text-black" : "text-neutral-500 hover:text-black"}`}>
+                    <input type="radio" name="interval" value="month" className="sr-only" checked={billingInterval === "month"} onChange={() => setBillingInterval("month")} />
+                    Monthly billing
+                  </label>
+                  <label className={`cursor-pointer px-4 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2 ${billingInterval === "year" ? "bg-white shadow-sm text-black" : "text-neutral-500 hover:text-black"}`}>
+                    <input type="radio" name="interval" value="year" className="sr-only" checked={billingInterval === "year"} onChange={() => setBillingInterval("year")} />
+                    Annual billing
+                    <span className="text-[10px] uppercase tracking-wider bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">Save ~20%</span>
+                  </label>
+                </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="border rounded-md p-4 flex flex-col items-center">
-                  <h4 className="font-bold">BASIC</h4>
-                  <p className="text-xl my-2">€{(2999 / 100).toFixed(2)} / mo</p>
-                  <p className="text-sm text-neutral-500 text-center mb-4">1 location</p>
-                  <input type="radio" name="plan" value="BASIC" defaultChecked className="w-4 h-4" />
-                </div>
-                <div className="border rounded-md p-4 flex flex-col items-center">
-                  <h4 className="font-bold">PRO</h4>
-                  <p className="text-xl my-2">€{(5999 / 100).toFixed(2)} / mo</p>
-                  <p className="text-sm text-neutral-500 text-center mb-4">Up to 3 locations</p>
-                  <input type="radio" name="plan" value="PRO" className="w-4 h-4" />
-                </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {(["BASIC", "PRO"] as PlanName[]).map((planName) => {
+                  const plan = PLANS[planName];
+                  const isSelected = selectedPlan === planName;
+                  
+                  const monthlyPrice = plan.monthlyAmountCents / 100;
+                  const annualPrice = plan.annualAmountCents / 100;
+                  const equivalentMonthly = plan.annualAmountCents / 100 / 12;
+                  
+                  const yearlyCostIfMonthly = plan.monthlyAmountCents * 12 / 100;
+                  const annualSaving = (plan.monthlyAmountCents * 12 - plan.annualAmountCents) / 100;
+
+                  return (
+                    <label
+                      key={planName}
+                      className={`relative flex flex-col border rounded-xl p-6 cursor-pointer transition-all ${isSelected ? "border-blue-600 ring-1 ring-blue-600 bg-blue-50/50" : "border-neutral-200 hover:border-blue-300"}`}
+                    >
+                      <input type="radio" name="plan" value={planName} className="sr-only" checked={isSelected} onChange={() => setSelectedPlan(planName)} />
+                      
+                      <div className="flex justify-between items-center mb-4">
+                        <h4 className="font-bold text-lg">{plan.name}</h4>
+                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${isSelected ? "border-blue-600 bg-blue-600" : "border-neutral-300"}`}>
+                          {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                        </div>
+                      </div>
+
+                      <p className="text-sm text-neutral-500 mb-4">{plan.locationLimit} location{plan.locationLimit > 1 ? "s" : ""}</p>
+
+                      {billingInterval === "month" ? (
+                        <div className="mt-auto">
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-3xl font-bold">€{monthlyPrice.toFixed(2)}</span>
+                            <span className="text-neutral-500">/ month</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="mt-auto flex flex-col gap-1">
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-3xl font-bold">€{annualPrice.toFixed(2)}</span>
+                            <span className="text-neutral-500">/ year</span>
+                          </div>
+                          
+                          <div className="text-sm font-medium text-neutral-600">
+                            Equivalent to €{equivalentMonthly.toFixed(2)}/month
+                          </div>
+                          
+                          <div className="mt-2 inline-block w-fit bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded">
+                            Save €{annualSaving.toFixed(2)}/year
+                          </div>
+                          
+                          <div className="text-xs text-neutral-400 mt-1 line-through">
+                            €{yearlyCostIfMonthly.toFixed(2)} if paid monthly
+                          </div>
+                        </div>
+                      )}
+                    </label>
+                  );
+                })}
+              </div>
+              
+              <div className="text-center text-sm text-neutral-500 mt-4">
+                {selectedPlan} &middot; {billingInterval === "month" ? "Monthly" : "Annual"} <br/>
+                €{billingInterval === "month" ? (PLANS[selectedPlan].monthlyAmountCents / 100).toFixed(2) : (PLANS[selectedPlan].annualAmountCents / 100).toFixed(2)} billed {billingInterval === "month" ? "monthly" : "yearly"}
               </div>
             </div>
           )}
