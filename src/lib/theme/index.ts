@@ -21,6 +21,19 @@ export interface VelaThemeTokens {
   muted: string
   mutedForeground: string
   focus: string
+  // Liquid Glass Design System Tokens
+  glass: string
+  glassStrong: string
+  glassSubtle: string
+  glassBorder: string
+  glassBorderMuted: string
+  glassBorderStrong: string
+  glassHighlight: string
+  shadowSoft: string
+  shadowFloating: string
+  active: string
+  hover: string
+  ambientGlow: string
 }
 
 export function parseHex(hex: string): [number, number, number] {
@@ -173,6 +186,29 @@ export function computeVelaTheme(branding?: TenantBranding | null): VelaThemeTok
   // Focus glow matching primary
   const focus = toRgba(primary, 0.35)
 
+  // Liquid Glass Design System Tokens
+  // Standard glass panel surface: translucent white intended for backdrop-filter
+  const glass = "rgba(255, 255, 255, 0.72)"
+  // Elevated glass surface (floating dock, active sheets, elevated cards)
+  const glassStrong = "rgba(255, 255, 255, 0.88)"
+  // Subtle glass surface (nested pills, input backgrounds)
+  const glassSubtle = "rgba(255, 255, 255, 0.45)"
+
+  // Glass borders and highlights derived from foreground and specular reflection
+  const glassBorder = toRgba(foreground, 0.08)
+  const glassBorderMuted = toRgba(foreground, 0.04)
+  const glassBorderStrong = toRgba(foreground, 0.16)
+  const glassHighlight = "rgba(255, 255, 255, 0.65)"
+
+  // Shadows
+  const shadowSoft = "0 8px 30px -4px rgba(0, 0, 0, 0.04)"
+  const shadowFloating = "0 16px 40px -6px rgba(0, 0, 0, 0.10), 0 4px 16px -2px rgba(0, 0, 0, 0.05)"
+
+  // States & Ambient Lighting
+  const active = toRgba(primary, 0.10)
+  const hover = toRgba(foreground, 0.05)
+  const ambientGlow = toRgba(primary, 0.04)
+
   return {
     primary,
     primaryForeground,
@@ -186,7 +222,19 @@ export function computeVelaTheme(branding?: TenantBranding | null): VelaThemeTok
     borderMuted,
     muted,
     mutedForeground,
-    focus
+    focus,
+    glass,
+    glassStrong,
+    glassSubtle,
+    glassBorder,
+    glassBorderMuted,
+    glassBorderStrong,
+    glassHighlight,
+    shadowSoft,
+    shadowFloating,
+    active,
+    hover,
+    ambientGlow
   }
 }
 
@@ -206,5 +254,17 @@ export function getVelaThemeStyles(branding?: TenantBranding | null): React.CSSP
     "--vela-muted": tokens.muted,
     "--vela-muted-foreground": tokens.mutedForeground,
     "--vela-focus": tokens.focus,
+    "--vela-glass": tokens.glass,
+    "--vela-glass-strong": tokens.glassStrong,
+    "--vela-glass-subtle": tokens.glassSubtle,
+    "--vela-glass-border": tokens.glassBorder,
+    "--vela-glass-border-muted": tokens.glassBorderMuted,
+    "--vela-glass-border-strong": tokens.glassBorderStrong,
+    "--vela-glass-highlight": tokens.glassHighlight,
+    "--vela-shadow-soft": tokens.shadowSoft,
+    "--vela-shadow-floating": tokens.shadowFloating,
+    "--vela-active": tokens.active,
+    "--vela-hover": tokens.hover,
+    "--vela-ambient-glow": tokens.ambientGlow,
   } as React.CSSProperties
 }

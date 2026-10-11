@@ -8,6 +8,7 @@ import BookingStatusActions from "./BookingStatusActions"
 import { Prisma } from "@prisma/client"
 
 import { getDashboardTenant } from "@/lib/tenant/context"
+import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell"
 
 export default async function DashboardBookingsPage({ 
   searchParams
@@ -75,7 +76,7 @@ export default async function DashboardBookingsPage({
   const totalPages = Math.ceil(total / take)
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
+    <DashboardPageShell variant="wide" className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-bold">Bookings</h1>
         <div className="flex gap-2">
@@ -195,6 +196,6 @@ export default async function DashboardBookingsPage({
           </div>
         )}
       </div>
-    </div>
+    </DashboardPageShell>
   )
 }

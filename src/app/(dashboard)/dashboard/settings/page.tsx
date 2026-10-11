@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Palette, Globe, Shield } from "lucide-react"
+import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell"
 
 export default async function SettingsPage() {
   const context = await getDashboardContext()
@@ -18,7 +19,7 @@ export default async function SettingsPage() {
   const isOwner = role === "OWNER"
 
   return (
-    <div className="space-y-6">
+    <DashboardPageShell variant="standard" className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-neutral-900">Settings & Configuration</h1>
         <p className="text-sm text-neutral-500 mt-1">Manage tenant configuration and workspace preferences.</p>
@@ -82,7 +83,7 @@ export default async function SettingsPage() {
           </Card>
         )}
       </div>
-    </div>
+    </DashboardPageShell>
   )
 }
 

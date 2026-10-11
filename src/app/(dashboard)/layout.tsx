@@ -2,9 +2,10 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth/config"
 import { redirect } from "next/navigation"
 import { getDashboardContext } from "@/lib/tenant/context"
-import Link from "next/link"
-import { Calendar, Users, Briefcase, MapPin, Settings, BarChart, LogOut, LayoutDashboard, Palette, CreditCard } from "lucide-react"
 import { ImpersonationBanner } from "@/components/admin/ImpersonationBanner"
+import { VelaThemeScope } from "@/components/theme/VelaThemeScope"
+import { DesktopSidebar } from "@/components/dashboard/DesktopSidebar"
+import { MobileFloatingDock } from "@/components/dashboard/MobileFloatingDock"
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions)
@@ -23,85 +24,51 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect("/onboarding")
   }
 
-  const isOwner = role === "OWNER"
-  const isStaff = role === "OWNER" || role === "ADMIN"
+  const monogram = (tenant.name?.charAt(0) || "V").toUpperCase()
 
   return (
-    <div className="flex flex-col h-screen bg-neutral-50 overflow-hidden">
-      <ImpersonationBanner />
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar Desktop */}
-      <aside className="w-64 bg-white border-r border-neutral-200 hidden md:flex md:flex-col">
-        <div className="p-6">
-          <h2 className="text-xl font-bold text-neutral-900 truncate">{tenant.name}</h2>
-          <p className="text-sm text-neutral-500 truncate">Vela Dashboard</p>
-        </div>
-        
-        <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
-          <NavLink href="/dashboard" icon={<LayoutDashboard className="w-4 h-4" />}>Overview</NavLink>
-          <NavLink href="/dashboard/calendar" icon={<Calendar className="w-4 h-4" />}>Calendar</NavLink>
-          <NavLink href="/dashboard/bookings" icon={<Briefcase className="w-4 h-4" />}>Bookings</NavLink>
-          {isStaff && (
-            <>
-              <NavLink href="/dashboard/customers" icon={<Users className="w-4 h-4" />}>Customers</NavLink>
-              <NavLink href="/dashboard/locations" icon={<MapPin className="w-4 h-4" />}>Locations</NavLink>
-              <NavLink href="/dashboard/analytics" icon={<BarChart className="w-4 h-4" />}>Analytics</NavLink>
-            </>
-          )}
-          {isStaff && (
-            <div className="pt-4 mt-4 border-t border-neutral-200">
-              <p className="px-3 text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">Settings</p>
-              <NavLink href="/dashboard/settings/customization" icon={<Palette className="w-4 h-4" />}>Customization</NavLink>
-              {isOwner && (
-                <>
-                  <NavLink href="/dashboard/settings" icon={<Settings className="w-4 h-4" />}>Configuration</NavLink>
-                  <NavLink href="/dashboard/subscription" icon={<CreditCard className="w-4 h-4" />}>Subscription</NavLink>
-                </>
-              )}
-            </div>
-          )}
-        </nav>
-
-        <div className="p-4 border-t border-neutral-200">
-          <form action={async () => {
-            "use server"
-            // We can't actually do signOut() easily from server action without importing a lot,
-            // so we will just provide a client component or link to an api route later.
-            // For now, this is a placeholder.
-          }}>
-            <button className="flex items-center w-full px-3 py-2 text-sm font-medium text-neutral-600 rounded-md hover:text-neutral-900 hover:bg-neutral-100">
-              <LogOut className="w-4 h-4 mr-3" />
-              Sign out
-            </button>
-          </form>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
-        {/* Mobile Header */}
-        <header className="bg-white border-b border-neutral-200 md:hidden flex items-center justify-between p-4">
-          <h2 className="text-lg font-bold text-neutral-900 truncate">{tenant.name}</h2>
-          <button className="text-neutral-500">Menu</button>
-        </header>
-
-        <div className="p-6 md:p-8 max-w-6xl mx-auto">
-          {children}
-        </div>
-      </main>
-      </div>
-    </div>
-  )
-}
-
-function NavLink({ href, icon, children }: { href: string, icon: React.ReactNode, children: React.ReactNode }) {
-  return (
-    <Link 
-      href={href}
-      className="flex items-center px-3 py-2 text-sm font-medium text-neutral-600 rounded-md hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
+    <VelaThemeScope 
+      branding={tenant} 
+      className="min-h-screen flex flex-col font-sans bg-[var(--vela-background)] text-[var(--vela-foreground)] antialiased relative selection:bg-[var(--vela-primary)] selection:text-[var(--vela-primary-foreground)]"
+      style={{
+        backgroundImage: "radial-gradient(ellipse 80% 50% at 50% -10%, var(--vela-ambient-glow), transparent 70%)"
+      }}
     >
-      <span className="mr-3">{icon}</span>
-      {children}
-    </Link>
+      <ImpersonationBanner />
+
+      {/* Mobile Top Brand Bar (Minimal & Clean) */}
+      <header className="lg:hidden flex items-center justify-between px-4 py-3.5 bg-[var(--vela-glass-strong)] backdrop-blur-xl border-b border-[var(--vela-glass-border)] sticky top-0 z-30">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div 
+            className="w-7 h-7 rounded-xl flex items-center justify-center font-bold text-xs tracking-tight shrink-0 shadow-xs"
+            style={{ 
+              backgroundColor: "var(--vela-primary)", 
+              color: "var(--vela-primary-foreground)" 
+            }}
+          >
+            {monogram}
+          </div>
+          <span className="font-bold text-sm text-[var(--vela-foreground)] truncate">
+            {tenant.name}
+          </span>
+        </div>
+        <span className="text-[11px] font-semibold text-[var(--vela-muted-foreground)] bg-[var(--vela-glass-subtle)] px-2.5 py-1 rounded-full border border-[var(--vela-glass-border-muted)] shrink-0">
+          {role}
+        </span>
+      </header>
+
+      {/* Main Workspace Frame */}
+      <div className="flex flex-1 min-h-0 relative">
+        <DesktopSidebar tenant={tenant} role={role} />
+
+        <main className="flex-1 overflow-y-auto min-w-0 pb-28 lg:pb-12">
+          <div className="p-4 sm:p-6 md:p-8 lg:p-10 w-full min-w-0">
+            {children}
+          </div>
+        </main>
+
+        <MobileFloatingDock tenant={tenant} role={role} />
+      </div>
+    </VelaThemeScope>
   )
 }

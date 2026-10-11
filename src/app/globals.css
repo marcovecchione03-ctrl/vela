@@ -18,6 +18,20 @@
   --vela-muted: rgba(23, 23, 23, 0.03);
   --vela-muted-foreground: rgba(23, 23, 23, 0.62);
   --vela-focus: rgba(23, 23, 23, 0.35);
+
+  /* Liquid Glass Design System Defaults */
+  --vela-glass: rgba(255, 255, 255, 0.72);
+  --vela-glass-strong: rgba(255, 255, 255, 0.88);
+  --vela-glass-subtle: rgba(255, 255, 255, 0.45);
+  --vela-glass-border: rgba(23, 23, 23, 0.08);
+  --vela-glass-border-muted: rgba(23, 23, 23, 0.04);
+  --vela-glass-border-strong: rgba(23, 23, 23, 0.16);
+  --vela-glass-highlight: rgba(255, 255, 255, 0.65);
+  --vela-shadow-soft: 0 8px 30px -4px rgba(0, 0, 0, 0.04);
+  --vela-shadow-floating: 0 16px 40px -6px rgba(0, 0, 0, 0.10), 0 4px 16px -2px rgba(0, 0, 0, 0.05);
+  --vela-active: rgba(23, 23, 23, 0.10);
+  --vela-hover: rgba(23, 23, 23, 0.05);
+  --vela-ambient-glow: rgba(23, 23, 23, 0.04);
 }
 
 @theme inline {
@@ -36,6 +50,16 @@
   --color-vela-muted: var(--vela-muted);
   --color-vela-muted-foreground: var(--vela-muted-foreground);
   --color-vela-focus: var(--vela-focus);
+  --color-vela-glass: var(--vela-glass);
+  --color-vela-glass-strong: var(--vela-glass-strong);
+  --color-vela-glass-subtle: var(--vela-glass-subtle);
+  --color-vela-glass-border: var(--vela-glass-border);
+  --color-vela-glass-border-muted: var(--vela-glass-border-muted);
+  --color-vela-glass-border-strong: var(--vela-glass-border-strong);
+  --color-vela-glass-highlight: var(--vela-glass-highlight);
+  --color-vela-active: var(--vela-active);
+  --color-vela-hover: var(--vela-hover);
+  --color-vela-ambient-glow: var(--vela-ambient-glow);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

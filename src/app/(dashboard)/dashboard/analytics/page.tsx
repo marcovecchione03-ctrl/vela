@@ -4,6 +4,7 @@ import { getDashboardTenant } from "@/lib/tenant/context"
 import { notFound } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
+import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell"
 import { validateCustomRange, classifyNewVsReturning } from "@/lib/logic/analytics"
 
 export default async function AnalyticsPage({
@@ -125,7 +126,7 @@ export default async function AnalyticsPage({
   }
 
   return (
-    <div className="space-y-6">
+    <DashboardPageShell variant="wide" className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Analytics</h1>
@@ -245,6 +246,6 @@ export default async function AnalyticsPage({
           </CardContent>
         </Card>
       </div>
-    </div>
+    </DashboardPageShell>
   )
 }

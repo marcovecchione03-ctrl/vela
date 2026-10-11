@@ -5,6 +5,7 @@ import { notFound } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getScoreBand } from "@/lib/crm/customer-score"
 import Link from "next/link"
+import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell"
 
 export default async function CustomersDirectoryPage({
   searchParams
@@ -123,7 +124,7 @@ export default async function CustomersDirectoryPage({
   const totalPages = Math.ceil(totalCustomers / pageSize)
 
   return (
-    <div className="space-y-6">
+    <DashboardPageShell variant="wide" className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Customers</h1>
@@ -259,6 +260,6 @@ export default async function CustomersDirectoryPage({
           )}
         </CardContent>
       </Card>
-    </div>
+    </DashboardPageShell>
   )
 }

@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth/config"
 import CalendarWrapper from "./CalendarWrapper"
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfDay, endOfDay, addDays } from "date-fns"
+import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell"
 
 export default async function DashboardCalendarPage({ 
   searchParams
@@ -95,19 +96,20 @@ export default async function DashboardCalendarPage({
   ])
 
   return (
-    <div className="h-[calc(100vh-80px)] min-h-[600px] flex flex-col bg-white rounded-xl shadow border">
-      <CalendarWrapper 
-       
-        tenantId={tenant.id}
-        initialView={view}
-        initialDate={referenceDate.toISOString()}
-        bookings={bookings}
-        timeBlocks={timeBlocks}
-        exceptions={exceptions}
-        employees={tenantWithEmployees.employees}
-        role={role}
-        employeeId={employeeId}
-      />
-    </div>
+    <DashboardPageShell variant="full">
+      <div className="h-[calc(100vh-80px)] min-h-[600px] flex flex-col bg-white rounded-xl shadow border">
+        <CalendarWrapper 
+          tenantId={tenant.id}
+          initialView={view}
+          initialDate={referenceDate.toISOString()}
+          bookings={bookings}
+          timeBlocks={timeBlocks}
+          exceptions={exceptions}
+          employees={tenantWithEmployees.employees}
+          role={role}
+          employeeId={employeeId}
+        />
+      </div>
+    </DashboardPageShell>
   )
 }

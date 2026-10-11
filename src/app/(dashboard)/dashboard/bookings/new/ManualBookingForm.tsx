@@ -22,6 +22,7 @@ import {
   AlertCircle, 
   ChevronDown 
 } from "lucide-react"
+import { GlassPanel } from "@/components/ui/GlassPanel"
 
 export interface ManualBookingFormProps {
   tenantId: string
@@ -184,7 +185,7 @@ export default function ManualBookingForm({
             LEFT PANEL: 1. Service & Schedule
         ========================================================================== */}
         <section aria-labelledby={`${formPrefix}-booking-details-title`} className="lg:col-span-5">
-          <div className="bg-vela-surface rounded-2xl border border-vela-border shadow-xs p-6 md:p-7 space-y-6">
+          <GlassPanel className="p-6 md:p-7 space-y-6 bg-vela-surface/80 border border-vela-border shadow-[var(--vela-shadow-soft)]">
             <div className="flex items-center gap-3 pb-4 border-b border-vela-border-muted">
               <div 
                 className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs"
@@ -351,14 +352,14 @@ export default function ManualBookingForm({
                 </button>
               </div>
             </div>
-          </div>
+          </GlassPanel>
         </section>
 
         {/* =========================================================================
             RIGHT PANEL: 2. Time & Client
         ========================================================================== */}
         <section aria-labelledby={`${formPrefix}-time-client-title`} className="lg:col-span-7">
-          <div className="bg-vela-surface rounded-2xl border border-vela-border shadow-xs p-6 md:p-7 space-y-6">
+          <GlassPanel className="p-6 md:p-7 space-y-6 bg-vela-surface/80 border border-vela-border shadow-[var(--vela-shadow-soft)]">
             <div className="flex items-center gap-3 pb-4 border-b border-vela-border-muted">
               <div 
                 className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs"
@@ -398,7 +399,7 @@ export default function ManualBookingForm({
                   </p>
                 </div>
               ) : availableSlots.length === 0 ? (
-                <div className="p-7 bg-vela-surface-subtle border border-dashed border-vela-border rounded-2xl text-center flex flex-col items-center justify-center">
+                <GlassPanel variant="subtle" className="p-7 bg-vela-surface-subtle/80 border border-dashed border-vela-border rounded-2xl text-center flex flex-col items-center justify-center">
                   <Clock className="w-7 h-7 text-vela-muted-foreground mb-2" />
                   <p className="text-sm font-semibold text-vela-foreground">
                     {hasSearched ? "No open slots on this date" : "Select date and find availability"}
@@ -408,7 +409,7 @@ export default function ManualBookingForm({
                       ? "Try choosing a different date or another staff member to see open booking windows."
                       : "Choose your booking details on the left, then click 'Find Availability' to display open times."}
                   </p>
-                </div>
+                </GlassPanel>
               ) : (
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5 max-h-52 overflow-y-auto p-1.5 border border-vela-border-muted rounded-2xl bg-vela-surface-subtle">
                   {availableSlots.map(slot => {
@@ -612,7 +613,7 @@ export default function ManualBookingForm({
                 )}
               </div>
             </div>
-          </div>
+          </GlassPanel>
         </section>
       </div>
     </div>
