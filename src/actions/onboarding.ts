@@ -276,7 +276,7 @@ export async function submitOnboardingStep(step: number, formData: FormData) {
 
       const { createCheckoutSession } = await import("@/actions/billing")
       
-      const successUrl = `${origin}/dashboard?success=true`
+      const successUrl = `${origin}/onboarding/success?session_id={CHECKOUT_SESSION_ID}`
       const cancelUrl = `${origin}/onboarding`
 
       try {

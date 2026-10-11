@@ -10,10 +10,7 @@ export default async function OnboardingPage() {
   }
 
   if (state.completed) {
-    redirect(`/${state.slug}/dashboard`) // Tenant routing convention? Actually, dashboard is just /dashboard if context is handled by host header. But wait! The middleware enforces routing.
-    // If the hostname determines tenant, we can't just route to /dashboard on localhost without setting the tenant. 
-    // Actually, in dev, we often use slugs in the URL if subdomains aren't configured. 
-    // For now, let's just redirect to /dashboard.
+    redirect("/dashboard")
   }
 
   return (
