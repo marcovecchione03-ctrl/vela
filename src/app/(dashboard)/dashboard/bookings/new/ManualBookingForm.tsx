@@ -139,12 +139,10 @@ export default function ManualBookingForm({
       }
 
       if (clientType === "REGISTERED") {
-        if (!customerId) throw new Error("Please select a customer.")
+        if (!customerId) throw new Error("Please select a registered customer")
         payload.customerId = customerId
       } else {
-        if (!otcFirstName || !otcLastName) {
-          throw new Error("First and Last name required for One-Time Client.")
-        }
+        if (!otcFirstName || !otcLastName) throw new Error("Please provide customer first and last name")
         payload.oneTimeClient = {
           firstName: otcFirstName,
           lastName: otcLastName,
@@ -154,50 +152,57 @@ export default function ManualBookingForm({
       }
 
       const res = await createManualBooking(tenantId, userId, payload)
-      router.push(`/dashboard/bookings/${res.id}`)
+      if (res?.id) {
+        router.push(`/dashboard/bookings/${res.id}`)
+      } else {
+        router.push(`/dashboard/bookings`)
+      }
     } catch (err: any) {
       setError(err.message || "Failed to create booking")
-    } finally {
       setSubmitLoading(false)
     }
   }
 
   const selectedService = services.find(s => s.id === serviceId)
-  const isSearchDisabled = searchLoading || !dateStr || !serviceId || !locationId || !employeeId
+  const isSearchDisabled = !dateStr || searchLoading
 
   return (
-    <div 
-      className="space-y-6"
-      style={themeStyles}
-    >
+    <div style={themeStyles} className="w-full space-y-6">
+      {/* Dynamic Error Banner with Refractive Styling */}
       {error && (
         <div 
           role="alert" 
-          className="p-4 rounded-xl bg-red-50/90 border border-red-200/80 text-red-700 text-sm font-medium flex items-center gap-3 shadow-xs"
+          className="p-4 rounded-2xl bg-red-50/90 border border-red-200/80 text-red-700 text-sm font-medium flex items-center gap-3 shadow-[0_4px_16px_rgba(239,68,68,0.08),inset_0_1px_1px_rgba(255,255,255,0.6)] backdrop-blur-md"
         >
           <AlertCircle className="w-5 h-5 shrink-0 text-red-600" />
           <span>{error}</span>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      {/* Spatial Asymmetric Floating Glass Sheets */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
         {/* =========================================================================
-            LEFT PANEL: 1. Service & Schedule
+            LEFT PANEL: 1. Booking Details (Floating Glass Sheet)
         ========================================================================== */}
         <section aria-labelledby={`${formPrefix}-booking-details-title`} className="lg:col-span-5">
-          <GlassPanel className="p-6 md:p-7 space-y-6 bg-vela-surface/80 border border-vela-border shadow-[var(--vela-shadow-soft)]">
-            <div className="flex items-center gap-3 pb-4 border-b border-vela-border-muted">
+          <GlassPanel 
+            variant="panel" 
+            highlight={true} 
+            className="p-6 sm:p-7 md:p-8 space-y-6 bg-vela-surface/75 border border-white/60 shadow-[0_20px_45px_-12px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_2px_rgba(255,255,255,0.85)]"
+          >
+            {/* Panel Header */}
+            <div className="flex items-center gap-3.5 pb-4 border-b border-[var(--vela-glass-border-muted)]">
               <div 
-                className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs"
+                className="w-8 h-8 rounded-2xl flex items-center justify-center font-bold text-xs shrink-0 shadow-[0_2px_8px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.4)] border border-white/30"
                 style={{ backgroundColor: "var(--vela-primary)", color: "var(--vela-primary-foreground)" }}
               >
                 1
               </div>
-              <div>
+              <div className="min-w-0">
                 <h2 id={`${formPrefix}-booking-details-title`} className="text-base font-bold text-vela-foreground tracking-tight">
                   Booking Details
                 </h2>
-                <p className="text-xs text-vela-muted-foreground">
+                <p className="text-xs text-vela-muted-foreground font-normal">
                   Select location, service, staff, and date
                 </p>
               </div>
@@ -205,18 +210,18 @@ export default function ManualBookingForm({
 
             <div className="space-y-5">
               {/* Location Field */}
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <label 
                   htmlFor={`${formPrefix}-location`}
-                  className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-vela-muted-foreground"
+                  className="flex items-center gap-2 text-xs font-semibold text-vela-foreground"
                 >
                   <MapPin className="w-3.5 h-3.5 text-vela-muted-foreground" />
                   <span>Location</span>
                 </label>
                 {locations.length === 1 ? (
-                  <div className="flex items-center justify-between px-3.5 py-2.5 bg-vela-surface-subtle border border-vela-border rounded-xl text-vela-foreground font-medium text-sm">
+                  <div className="flex items-center justify-between px-4 py-3 bg-vela-surface-subtle/50 backdrop-blur-md border border-vela-border/30 rounded-2xl text-vela-foreground font-medium text-sm shadow-[inset_0_1px_2px_rgba(0,0,0,0.02),inset_0_0_0_1px_rgba(255,255,255,0.6)]">
                     <span className="truncate">{locations[0]?.name}</span>
-                    <span className="text-[11px] font-semibold text-vela-muted-foreground bg-vela-surface px-2 py-0.5 rounded-full border border-vela-border-muted shrink-0">
+                    <span className="text-[11px] font-semibold text-vela-muted-foreground bg-white/70 px-2.5 py-0.5 rounded-full border border-white/60 shadow-2xs shrink-0">
                       Sole location
                     </span>
                   </div>
@@ -226,7 +231,7 @@ export default function ManualBookingForm({
                       id={`${formPrefix}-location`}
                       value={locationId}
                       onChange={e => setLocationId(e.target.value)}
-                      className="w-full h-11 pl-3.5 pr-10 border border-vela-border rounded-xl bg-vela-surface text-sm font-medium text-vela-foreground focus:outline-none focus:ring-2 focus:ring-[var(--vela-focus)] appearance-none transition-shadow"
+                      className="w-full h-12 pl-4 pr-10 border border-vela-border/40 rounded-2xl bg-white/60 backdrop-blur-md text-sm font-medium text-vela-foreground shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.03),inset_0_0_0_1px_rgba(255,255,255,0.6)] focus:outline-none focus:ring-2 focus:ring-[var(--vela-focus)] focus:bg-white/85 appearance-none transition-all cursor-pointer"
                     >
                       {locations.map(l => (
                         <option key={l.id} value={l.id}>{l.name}</option>
@@ -238,10 +243,10 @@ export default function ManualBookingForm({
               </div>
 
               {/* Service Field */}
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <label 
                   htmlFor={`${formPrefix}-service`}
-                  className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-vela-muted-foreground"
+                  className="flex items-center gap-2 text-xs font-semibold text-vela-foreground"
                 >
                   <Briefcase className="w-3.5 h-3.5 text-vela-muted-foreground" />
                   <span>Service</span>
@@ -251,7 +256,7 @@ export default function ManualBookingForm({
                     id={`${formPrefix}-service`}
                     value={serviceId}
                     onChange={e => setServiceId(e.target.value)}
-                    className="w-full h-11 pl-3.5 pr-10 border border-vela-border rounded-xl bg-vela-surface text-sm font-medium text-vela-foreground focus:outline-none focus:ring-2 focus:ring-[var(--vela-focus)] appearance-none transition-shadow"
+                    className="w-full h-12 pl-4 pr-10 border border-[var(--vela-glass-border)] rounded-2xl bg-white/60 backdrop-blur-md text-sm font-medium text-vela-foreground shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.03),inset_0_0_0_1px_rgba(255,255,255,0.6)] focus:outline-none focus:ring-2 focus:ring-[var(--vela-focus)] focus:bg-white/85 appearance-none transition-all cursor-pointer"
                   >
                     {services.map(s => (
                       <option key={s.id} value={s.id}>
@@ -262,28 +267,28 @@ export default function ManualBookingForm({
                   <ChevronDown className="w-4 h-4 text-vela-muted-foreground absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
                 {selectedService && (
-                  <div className="flex items-center justify-between text-xs text-vela-muted-foreground pt-0.5 px-1">
+                  <div className="flex items-center justify-between text-xs text-vela-muted-foreground pt-0.5 px-1 font-medium">
                     <span>Duration: {selectedService.durationMinutes} min</span>
                     <span className="font-semibold text-vela-foreground">€{(selectedService.price / 100).toFixed(2)}</span>
                   </div>
                 )}
               </div>
 
-              {/* Employee Field */}
-              <div className="space-y-1.5">
+              {/* Staff Member Field */}
+              <div className="space-y-2">
                 <label 
                   htmlFor={`${formPrefix}-employee`}
-                  className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-vela-muted-foreground"
+                  className="flex items-center gap-2 text-xs font-semibold text-vela-foreground"
                 >
                   <User className="w-3.5 h-3.5 text-vela-muted-foreground" />
                   <span>Staff Member</span>
                 </label>
                 {role === "EMPLOYEE" ? (
-                  <div className="flex items-center justify-between px-3.5 py-2.5 bg-vela-surface-subtle border border-vela-border rounded-xl text-vela-foreground font-medium text-sm">
+                  <div className="flex items-center justify-between px-4 py-3 bg-white/60 backdrop-blur-md border border-[var(--vela-glass-border)] rounded-2xl text-vela-foreground font-medium text-sm shadow-[inset_0_1px_2px_rgba(0,0,0,0.02),inset_0_0_0_1px_rgba(255,255,255,0.6)]">
                     <span className="truncate">
                       {employees.find(e => e.id === currentEmployeeId)?.name || "Current Staff"}
                     </span>
-                    <span className="text-[11px] font-semibold text-vela-muted-foreground bg-vela-surface px-2 py-0.5 rounded-full border border-vela-border-muted shrink-0">
+                    <span className="text-[11px] font-semibold text-vela-muted-foreground bg-white/70 px-2.5 py-0.5 rounded-full border border-white/60 shadow-2xs shrink-0">
                       Assigned to you
                     </span>
                   </div>
@@ -293,7 +298,7 @@ export default function ManualBookingForm({
                       id={`${formPrefix}-employee`}
                       value={employeeId}
                       onChange={e => setEmployeeId(e.target.value)}
-                      className="w-full h-11 pl-3.5 pr-10 border border-vela-border rounded-xl bg-vela-surface text-sm font-medium text-vela-foreground focus:outline-none focus:ring-2 focus:ring-[var(--vela-focus)] appearance-none transition-shadow"
+                      className="w-full h-12 pl-4 pr-10 border border-[var(--vela-glass-border)] rounded-2xl bg-white/60 backdrop-blur-md text-sm font-medium text-vela-foreground shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.03),inset_0_0_0_1px_rgba(255,255,255,0.6)] focus:outline-none focus:ring-2 focus:ring-[var(--vela-focus)] focus:bg-white/85 appearance-none transition-all cursor-pointer"
                     >
                       {employees.map(e => (
                         <option key={e.id} value={e.id}>{e.name}</option>
@@ -304,11 +309,11 @@ export default function ManualBookingForm({
                 )}
               </div>
 
-              {/* Date Field */}
-              <div className="space-y-1.5">
+              {/* Appointment Date Field */}
+              <div className="space-y-2">
                 <label 
                   htmlFor={`${formPrefix}-date`}
-                  className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-vela-muted-foreground"
+                  className="flex items-center gap-2 text-xs font-semibold text-vela-foreground"
                 >
                   <Calendar className="w-3.5 h-3.5 text-vela-muted-foreground" />
                   <span>Appointment Date</span>
@@ -318,23 +323,23 @@ export default function ManualBookingForm({
                   type="date"
                   value={dateStr}
                   onChange={e => setDateStr(e.target.value)}
-                  className="w-full h-11 px-3.5 border border-vela-border rounded-xl bg-vela-surface text-sm font-medium text-vela-foreground focus:outline-none focus:ring-2 focus:ring-[var(--vela-focus)] transition-shadow"
+                  className="w-full h-12 px-4 border border-[var(--vela-glass-border)] rounded-2xl bg-white/60 backdrop-blur-md text-sm font-medium text-vela-foreground shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.03),inset_0_0_0_1px_rgba(255,255,255,0.6)] focus:outline-none focus:ring-2 focus:ring-[var(--vela-focus)] focus:bg-white/85 transition-all cursor-pointer"
                 />
-                <p className="text-[11px] text-vela-muted-foreground px-1">
+                <p className="text-[11px] text-vela-muted-foreground px-1 font-normal">
                   Pick a calendar date to check live availability slots.
                 </p>
               </div>
 
-              {/* Find Availability Action */}
+              {/* Find Availability Action Button */}
               <div className="pt-2">
                 <button
                   type="button"
                   onClick={handleSearch}
                   disabled={isSearchDisabled}
                   style={!isSearchDisabled ? { backgroundColor: "var(--vela-primary)", color: "var(--vela-primary-foreground)" } : undefined}
-                  className={`w-full h-12 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-xs ${
+                  className={`w-full h-12 rounded-2xl font-bold text-xs tracking-tight transition-all flex items-center justify-center gap-2 shadow-[0_8px_20px_-4px_rgba(0,0,0,0.12),inset_0_1px_1.5px_rgba(255,255,255,0.35)] ${
                     isSearchDisabled 
-                      ? "bg-vela-surface-subtle text-vela-muted-foreground border border-vela-border cursor-not-allowed" 
+                      ? "bg-vela-surface-subtle/60 text-vela-muted-foreground/60 border border-vela-border/40 cursor-not-allowed shadow-none" 
                       : "hover:opacity-95 active:scale-[0.99] cursor-pointer"
                   }`}
                 >
@@ -356,22 +361,27 @@ export default function ManualBookingForm({
         </section>
 
         {/* =========================================================================
-            RIGHT PANEL: 2. Time & Client
+            RIGHT PANEL: 2. Time & Client (Floating Glass Sheet)
         ========================================================================== */}
         <section aria-labelledby={`${formPrefix}-time-client-title`} className="lg:col-span-7">
-          <GlassPanel className="p-6 md:p-7 space-y-6 bg-vela-surface/80 border border-vela-border shadow-[var(--vela-shadow-soft)]">
-            <div className="flex items-center gap-3 pb-4 border-b border-vela-border-muted">
+          <GlassPanel 
+            variant="panel" 
+            highlight={true} 
+            className="p-6 sm:p-7 md:p-8 space-y-6 bg-vela-surface/75 border border-white/60 shadow-[0_20px_45px_-12px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_2px_rgba(255,255,255,0.85)]"
+          >
+            {/* Panel Header */}
+            <div className="flex items-center gap-3.5 pb-4 border-b border-[var(--vela-glass-border-muted)]">
               <div 
-                className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs"
+                className="w-8 h-8 rounded-2xl flex items-center justify-center font-bold text-xs shrink-0 shadow-[0_2px_8px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.4)] border border-white/30"
                 style={{ backgroundColor: "var(--vela-primary)", color: "var(--vela-primary-foreground)" }}
               >
                 2
               </div>
-              <div>
+              <div className="min-w-0">
                 <h2 id={`${formPrefix}-time-client-title`} className="text-base font-bold text-vela-foreground tracking-tight">
                   Time & Client
                 </h2>
-                <p className="text-xs text-vela-muted-foreground">
+                <p className="text-xs text-vela-muted-foreground font-normal">
                   Pick an available slot and enter client information
                 </p>
               </div>
@@ -380,7 +390,7 @@ export default function ManualBookingForm({
             {/* Available Times Slot Grid */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold uppercase tracking-wider text-vela-muted-foreground flex items-center gap-1.5">
+                <label className="text-xs font-semibold text-vela-foreground flex items-center gap-2">
                   <Clock className="w-3.5 h-3.5 text-vela-muted-foreground" />
                   <span>Available Times</span>
                 </label>
@@ -392,26 +402,26 @@ export default function ManualBookingForm({
               </div>
 
               {searchLoading ? (
-                <div className="p-8 bg-vela-surface-subtle border border-vela-border-muted rounded-2xl flex flex-col items-center justify-center text-center space-y-2">
+                <div className="p-8 bg-white/40 border border-white/50 rounded-2xl flex flex-col items-center justify-center text-center space-y-2 backdrop-blur-md">
                   <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin text-vela-muted-foreground" />
                   <p className="text-xs font-medium text-vela-muted-foreground">
                     Scanning staff schedules and location rules...
                   </p>
                 </div>
               ) : availableSlots.length === 0 ? (
-                <GlassPanel variant="subtle" className="p-7 bg-vela-surface-subtle/80 border border-dashed border-vela-border rounded-2xl text-center flex flex-col items-center justify-center">
-                  <Clock className="w-7 h-7 text-vela-muted-foreground mb-2" />
-                  <p className="text-sm font-semibold text-vela-foreground">
+                <GlassPanel variant="subtle" className="p-7 sm:p-8 bg-white/40 border border-white/50 rounded-2xl sm:rounded-3xl text-center flex flex-col items-center justify-center backdrop-blur-md">
+                  <Clock className="w-8 h-8 text-vela-muted-foreground/70 mb-2" />
+                  <p className="text-sm font-semibold text-vela-foreground tracking-tight">
                     {hasSearched ? "No open slots on this date" : "Select date and find availability"}
                   </p>
-                  <p className="text-xs text-vela-muted-foreground max-w-sm mt-1">
+                  <p className="text-xs text-vela-muted-foreground max-w-sm mt-1 leading-relaxed">
                     {hasSearched 
                       ? "Try choosing a different date or another staff member to see open booking windows."
                       : "Choose your booking details on the left, then click 'Find Availability' to display open times."}
                   </p>
                 </GlassPanel>
               ) : (
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5 max-h-52 overflow-y-auto p-1.5 border border-vela-border-muted rounded-2xl bg-vela-surface-subtle">
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5 max-h-56 overflow-y-auto p-2 border border-white/50 rounded-2xl bg-black/[0.02] backdrop-blur-md">
                   {availableSlots.map(slot => {
                     const isSelected = selectedSlot === slot
                     const timeLabel = new Date(slot).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -425,10 +435,10 @@ export default function ManualBookingForm({
                           color: "var(--vela-primary-foreground)", 
                           borderColor: "var(--vela-primary)" 
                         } : undefined}
-                        className={`flex items-center justify-center gap-1.5 py-2.5 px-3 text-xs font-semibold rounded-xl border transition-all cursor-pointer shadow-xs ${
+                        className={`group relative flex items-center justify-center gap-1.5 py-2.5 px-3 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
                           isSelected
-                            ? "ring-2 ring-offset-1 ring-[var(--vela-focus)] shadow-sm"
-                            : "bg-vela-surface border-vela-border text-vela-foreground hover:border-vela-primary hover:bg-vela-surface-subtle"
+                            ? "shadow-[0_4px_16px_rgba(0,0,0,0.14),inset_0_1px_1.5px_rgba(255,255,255,0.4)] ring-2 ring-offset-1 ring-[var(--vela-focus)] scale-[1.02]"
+                            : "bg-white/75 hover:bg-white/95 text-vela-foreground border-white/60 shadow-[0_2px_6px_rgba(0,0,0,0.03),inset_0_1px_1px_rgba(255,255,255,0.7)] hover:-translate-y-0.5"
                         }`}
                       >
                         {isSelected && <Check className="w-3.5 h-3.5 shrink-0" />}
@@ -440,25 +450,25 @@ export default function ManualBookingForm({
               )}
             </div>
 
-            {/* Client Type Segmented Control */}
-            <div className="pt-2 space-y-4">
-              <label className="text-xs font-semibold uppercase tracking-wider text-vela-muted-foreground block">
+            {/* Client Type Liquid Segmented Control */}
+            <div className="pt-2 space-y-3">
+              <label className="text-xs font-semibold text-vela-foreground block">
                 Client Type
               </label>
               <div 
                 role="tablist" 
                 aria-label="Client Type"
-                className="bg-vela-surface-subtle p-1 rounded-xl flex gap-1 border border-vela-border-muted"
+                className="bg-black/[0.03] p-1.5 rounded-2xl flex gap-1.5 border border-white/50 backdrop-blur-md shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
               >
                 <button
                   type="button"
                   role="tab"
                   aria-selected={clientType === "REGISTERED"}
                   onClick={() => setClientType("REGISTERED")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3.5 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
                     clientType === "REGISTERED"
-                      ? "bg-vela-surface text-vela-foreground shadow-xs"
-                      : "text-vela-muted-foreground hover:text-vela-foreground"
+                      ? "bg-white/90 text-vela-foreground shadow-[0_3px_12px_rgba(0,0,0,0.07),inset_0_1px_1.5px_rgba(255,255,255,0.9)] border border-white/70"
+                      : "text-vela-muted-foreground hover:text-vela-foreground hover:bg-white/30"
                   }`}
                 >
                   <Users className="w-3.5 h-3.5" />
@@ -469,10 +479,10 @@ export default function ManualBookingForm({
                   role="tab"
                   aria-selected={clientType === "ONETIME"}
                   onClick={() => setClientType("ONETIME")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3.5 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
                     clientType === "ONETIME"
-                      ? "bg-vela-surface text-vela-foreground shadow-xs"
-                      : "text-vela-muted-foreground hover:text-vela-foreground"
+                      ? "bg-white/90 text-vela-foreground shadow-[0_3px_12px_rgba(0,0,0,0.07),inset_0_1px_1.5px_rgba(255,255,255,0.9)] border border-white/70"
+                      : "text-vela-muted-foreground hover:text-vela-foreground hover:bg-white/30"
                   }`}
                 >
                   <User className="w-3.5 h-3.5" />
@@ -484,20 +494,20 @@ export default function ManualBookingForm({
               {clientType === "REGISTERED" ? (
                 <div className="space-y-3 pt-1">
                   <div className="relative">
-                    <Search className="w-4 h-4 text-vela-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Search className="w-4 h-4 text-vela-muted-foreground absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="text"
                       placeholder="Search customers by name or phone..."
                       value={customerSearchQuery}
                       onChange={e => handleCustomerSearch(e.target.value)}
-                      className="w-full h-11 pl-10 pr-3.5 border border-vela-border rounded-xl bg-vela-surface text-sm font-medium text-vela-foreground placeholder:text-vela-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--vela-focus)] transition-shadow"
+                      className="w-full h-12 pl-11 pr-4 border border-[var(--vela-glass-border)] rounded-2xl bg-white/60 backdrop-blur-md text-sm font-medium text-vela-foreground placeholder:text-vela-muted-foreground shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.03),inset_0_0_0_1px_rgba(255,255,255,0.6)] focus:outline-none focus:ring-2 focus:ring-[var(--vela-focus)] focus:bg-white/85 transition-all"
                     />
                   </div>
                   <div className="relative">
                     <select
                       value={customerId}
                       onChange={e => setCustomerId(e.target.value)}
-                      className="w-full h-11 pl-3.5 pr-10 border border-vela-border rounded-xl bg-vela-surface text-sm font-medium text-vela-foreground focus:outline-none focus:ring-2 focus:ring-[var(--vela-focus)] appearance-none transition-shadow"
+                      className="w-full h-12 pl-4 pr-10 border border-[var(--vela-glass-border)] rounded-2xl bg-white/60 backdrop-blur-md text-sm font-medium text-vela-foreground shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.03),inset_0_0_0_1px_rgba(255,255,255,0.6)] focus:outline-none focus:ring-2 focus:ring-[var(--vela-focus)] focus:bg-white/85 appearance-none transition-all cursor-pointer"
                     >
                       <option value="">-- Select Customer --</option>
                       {customerSearchResults.map((c: any) => (
@@ -508,89 +518,89 @@ export default function ManualBookingForm({
                     </select>
                     <ChevronDown className="w-4 h-4 text-vela-muted-foreground absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   </div>
-                  <p className="text-[11px] text-vela-muted-foreground px-1">
-                    Select an existing customer from your CRM or search above by keyword.
-                  </p>
                 </div>
               ) : (
                 <div className="space-y-3 pt-1">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="text-[11px] font-semibold text-vela-muted-foreground block">
+                      <label className="text-xs font-semibold text-vela-foreground">
                         First Name <span className="text-red-500">*</span>
                       </label>
                       <input
-                        placeholder="e.g. Marco"
+                        type="text"
+                        placeholder="John"
                         value={otcFirstName}
                         onChange={e => setOtcFirstName(e.target.value)}
-                        className="w-full h-11 px-3.5 border border-vela-border rounded-xl bg-vela-surface text-sm font-medium text-vela-foreground placeholder:text-vela-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--vela-focus)] transition-shadow"
+                        className="w-full h-12 px-4 border border-[var(--vela-glass-border)] rounded-2xl bg-white/60 backdrop-blur-md text-sm font-medium text-vela-foreground placeholder:text-vela-muted-foreground shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.03),inset_0_0_0_1px_rgba(255,255,255,0.6)] focus:outline-none focus:ring-2 focus:ring-[var(--vela-focus)] focus:bg-white/85 transition-all"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[11px] font-semibold text-vela-muted-foreground block">
+                      <label className="text-xs font-semibold text-vela-foreground">
                         Last Name <span className="text-red-500">*</span>
                       </label>
                       <input
-                        placeholder="e.g. Bianchi"
+                        type="text"
+                        placeholder="Doe"
                         value={otcLastName}
                         onChange={e => setOtcLastName(e.target.value)}
-                        className="w-full h-11 px-3.5 border border-vela-border rounded-xl bg-vela-surface text-sm font-medium text-vela-foreground placeholder:text-vela-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--vela-focus)] transition-shadow"
+                        className="w-full h-12 px-4 border border-[var(--vela-glass-border)] rounded-2xl bg-white/60 backdrop-blur-md text-sm font-medium text-vela-foreground placeholder:text-vela-muted-foreground shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.03),inset_0_0_0_1px_rgba(255,255,255,0.6)] focus:outline-none focus:ring-2 focus:ring-[var(--vela-focus)] focus:bg-white/85 transition-all"
                       />
                     </div>
                   </div>
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="text-[11px] font-semibold text-vela-muted-foreground block">
-                        Email <span className="text-vela-muted-foreground/70 font-normal">(Optional)</span>
+                      <label className="text-xs font-semibold text-vela-foreground">
+                        Email Address <span className="text-vela-muted-foreground/70 font-normal">(Optional)</span>
                       </label>
                       <input
                         type="email"
-                        placeholder="marco@example.com"
+                        placeholder="john@example.com"
                         value={otcEmail}
                         onChange={e => setOtcEmail(e.target.value)}
-                        className="w-full h-11 px-3.5 border border-vela-border rounded-xl bg-vela-surface text-sm font-medium text-vela-foreground placeholder:text-vela-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--vela-focus)] transition-shadow"
+                        className="w-full h-12 px-4 border border-[var(--vela-glass-border)] rounded-2xl bg-white/60 backdrop-blur-md text-sm font-medium text-vela-foreground placeholder:text-vela-muted-foreground shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.03),inset_0_0_0_1px_rgba(255,255,255,0.6)] focus:outline-none focus:ring-2 focus:ring-[var(--vela-focus)] focus:bg-white/85 transition-all"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[11px] font-semibold text-vela-muted-foreground block">
-                        Phone <span className="text-vela-muted-foreground/70 font-normal">(Optional)</span>
+                      <label className="text-xs font-semibold text-vela-foreground">
+                        Phone Number <span className="text-vela-muted-foreground/70 font-normal">(Optional)</span>
                       </label>
                       <input
                         type="tel"
                         placeholder="+39 333 1234567"
                         value={otcPhone}
                         onChange={e => setOtcPhone(e.target.value)}
-                        className="w-full h-11 px-3.5 border border-vela-border rounded-xl bg-vela-surface text-sm font-medium text-vela-foreground placeholder:text-vela-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--vela-focus)] transition-shadow"
+                        className="w-full h-12 px-4 border border-[var(--vela-glass-border)] rounded-2xl bg-white/60 backdrop-blur-md text-sm font-medium text-vela-foreground placeholder:text-vela-muted-foreground shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.03),inset_0_0_0_1px_rgba(255,255,255,0.6)] focus:outline-none focus:ring-2 focus:ring-[var(--vela-focus)] focus:bg-white/85 transition-all"
                       />
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Internal Note */}
+              {/* Internal Staff Note */}
               <div className="space-y-1.5 pt-2">
-                <label className="text-xs font-semibold uppercase tracking-wider text-vela-muted-foreground block">
-                  Internal Staff Note <span className="text-vela-muted-foreground/70 font-normal normal-case">(Optional)</span>
+                <label className="text-xs font-semibold text-vela-foreground block">
+                  Internal Staff Note <span className="text-vela-muted-foreground/70 font-normal">(Optional)</span>
                 </label>
                 <textarea
                   placeholder="Special requests, treatment notes, or instructions for the staff..."
                   value={internalNote}
                   onChange={e => setInternalNote(e.target.value)}
                   rows={2}
-                  className="w-full p-3.5 border border-vela-border rounded-xl bg-vela-surface text-sm font-medium text-vela-foreground placeholder:text-vela-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--vela-focus)] transition-shadow resize-none"
+                  className="w-full p-4 border border-[var(--vela-glass-border)] rounded-2xl bg-white/60 backdrop-blur-md text-sm font-medium text-vela-foreground placeholder:text-vela-muted-foreground shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.03),inset_0_0_0_1px_rgba(255,255,255,0.6)] focus:outline-none focus:ring-2 focus:ring-[var(--vela-focus)] focus:bg-white/85 transition-all resize-none"
                 />
               </div>
 
-              {/* Final Confirm Action */}
+              {/* Final Confirm Action CTA */}
               <div className="pt-3">
                 <button
                   type="button"
                   onClick={handleConfirm}
                   disabled={!selectedSlot || submitLoading}
                   style={selectedSlot && !submitLoading ? { backgroundColor: "var(--vela-primary)", color: "var(--vela-primary-foreground)" } : undefined}
-                  className={`w-full h-13 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-xs ${
+                  className={`w-full h-14 rounded-2xl font-bold text-sm tracking-tight transition-all flex items-center justify-center gap-2.5 shadow-[0_12px_28px_-6px_rgba(0,0,0,0.18),0_4px_10px_-2px_rgba(0,0,0,0.08),inset_0_1px_2px_rgba(255,255,255,0.35)] ${
                     !selectedSlot || submitLoading
-                      ? "bg-vela-surface-subtle text-vela-muted-foreground border border-vela-border cursor-not-allowed"
+                      ? "bg-vela-surface-subtle/60 text-vela-muted-foreground border border-vela-border/40 cursor-not-allowed shadow-none"
                       : "hover:opacity-95 active:scale-[0.99] cursor-pointer"
                   }`}
                 >
@@ -607,7 +617,7 @@ export default function ManualBookingForm({
                   )}
                 </button>
                 {!selectedSlot && (
-                  <p className="text-center text-[11px] text-vela-muted-foreground font-medium mt-2">
+                  <p className="text-center text-[11px] text-vela-muted-foreground font-medium mt-2.5">
                     Select an available time slot above to enable booking confirmation.
                   </p>
                 )}

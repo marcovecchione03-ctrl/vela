@@ -45,12 +45,12 @@ export function DesktopSidebar({ tenant, role }: DesktopSidebarProps) {
   return (
     <aside 
       aria-label="Desktop Navigation"
-      className="hidden lg:flex lg:flex-col lg:w-64 xl:w-72 shrink-0 h-screen sticky top-0 bg-[var(--vela-glass-strong)] backdrop-blur-2xl border-r border-[var(--vela-glass-border)] transition-all z-20"
+      className="hidden lg:flex lg:flex-col lg:w-64 xl:w-72 shrink-0 h-[calc(100vh-2rem)] sticky top-4 rounded-[30px] xl:rounded-[34px] bg-[var(--vela-glass-strong)] backdrop-blur-3xl border border-white/60 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.08),0_0_0_1px_rgba(255,255,255,0.4),inset_0_1px_2px_rgba(255,255,255,0.8)] transition-all z-20 overflow-hidden"
     >
-      {/* Tenant Brand Identity */}
-      <div className="p-6 border-b border-[var(--vela-glass-border-muted)] flex items-center gap-3.5">
+      {/* Tenant Brand Identity: Soft Glass Card */}
+      <div className="p-5 border-b border-[var(--vela-glass-border-muted)] flex items-center gap-3.5 relative overflow-hidden bg-gradient-to-b from-white/40 to-transparent">
         <div 
-          className="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm tracking-tight shrink-0 shadow-xs"
+          className="w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-sm tracking-tight shrink-0 shadow-[0_4px_12px_rgba(0,0,0,0.08),inset_0_1px_1.5px_rgba(255,255,255,0.4)] border border-white/30 transition-transform hover:scale-105"
           style={{ 
             backgroundColor: "var(--vela-primary)", 
             color: "var(--vela-primary-foreground)" 
@@ -59,17 +59,18 @@ export function DesktopSidebar({ tenant, role }: DesktopSidebarProps) {
           {monogram}
         </div>
         <div className="min-w-0 flex-1">
-          <h2 className="text-base font-bold text-[var(--vela-foreground)] truncate tracking-tight">
+          <h2 className="text-sm font-bold text-[var(--vela-foreground)] truncate tracking-tight">
             {tenant.name}
           </h2>
-          <p className="text-xs text-[var(--vela-muted-foreground)] truncate font-medium">
-            Vela Workspace
+          <p className="text-[11px] text-[var(--vela-muted-foreground)] truncate font-medium flex items-center gap-1.5 mt-0.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
+            <span>Vela Workspace</span>
           </p>
         </div>
       </div>
 
       {/* Navigation Items */}
-      <nav aria-label="Main menu" className="flex-1 px-3.5 py-4 space-y-1.5 overflow-y-auto">
+      <nav aria-label="Main menu" className="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto">
         <SidebarNavLink 
           href="/dashboard" 
           icon={<LayoutDashboard className="w-4 h-4" />}
@@ -123,9 +124,9 @@ export function DesktopSidebar({ tenant, role }: DesktopSidebarProps) {
         )}
 
         {isStaff && (
-          <div className="pt-4 mt-4 border-t border-[var(--vela-glass-border-muted)] space-y-1.5">
-            <p className="px-3.5 text-[11px] font-semibold text-[var(--vela-muted-foreground)] uppercase tracking-wider mb-2">
-              Settings
+          <div className="pt-3.5 mt-3.5 border-t border-[var(--vela-glass-border-muted)] space-y-1.5">
+            <p className="px-3 text-[10px] font-semibold text-[var(--vela-muted-foreground)] uppercase tracking-wider mb-2">
+              Management
             </p>
             <SidebarNavLink 
               href="/dashboard/settings/customization" 
@@ -159,11 +160,11 @@ export function DesktopSidebar({ tenant, role }: DesktopSidebarProps) {
       </nav>
 
       {/* Quiet Sign Out Footer */}
-      <div className="p-4 border-t border-[var(--vela-glass-border-muted)]">
+      <div className="p-3.5 border-t border-[var(--vela-glass-border-muted)] bg-gradient-to-t from-white/30 to-transparent">
         <button
           type="button"
           onClick={() => signOut({ callbackUrl: "/auth/login" })}
-          className="flex items-center gap-3 w-full px-3.5 py-2.5 text-sm font-medium text-[var(--vela-muted-foreground)] rounded-xl hover:text-[var(--vela-foreground)] hover:bg-[var(--vela-hover)] transition-all cursor-pointer"
+          className="flex items-center gap-3 w-full px-3 py-2.5 text-xs font-semibold text-[var(--vela-muted-foreground)] rounded-2xl hover:text-[var(--vela-foreground)] hover:bg-white/50 hover:shadow-2xs transition-all cursor-pointer"
         >
           <LogOut className="w-4 h-4" />
           <span>Sign Out</span>
@@ -188,14 +189,22 @@ function SidebarNavLink({
     <Link
       href={href}
       aria-current={isActive ? "page" : undefined}
-      className={`flex items-center gap-3 px-3.5 py-2.5 min-h-[44px] text-sm font-medium rounded-xl transition-all cursor-pointer ${
+      className={`group relative flex items-center gap-3 px-3.5 py-2.5 min-h-[44px] text-xs font-semibold rounded-2xl transition-all duration-200 cursor-pointer ${
         isActive
-          ? "bg-[var(--vela-active)] text-[var(--vela-foreground)] font-semibold shadow-xs border border-[var(--vela-glass-border-strong)]"
-          : "text-[var(--vela-muted-foreground)] hover:text-[var(--vela-foreground)] hover:bg-[var(--vela-hover)]"
+          ? "text-[var(--vela-foreground)] shadow-[0_4px_16px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_1.5px_rgba(255,255,255,0.9),inset_0_0_0_1px_rgba(255,255,255,0.7)] border border-[var(--vela-glass-border-strong)] bg-white/70 backdrop-blur-md"
+          : "text-[var(--vela-muted-foreground)] hover:text-[var(--vela-foreground)] hover:bg-white/40 hover:shadow-2xs"
       }`}
+      style={isActive ? {
+        backgroundColor: "color-mix(in srgb, var(--vela-primary) 10%, rgba(255, 255, 255, 0.75))"
+      } : undefined}
     >
-      <span className="shrink-0">{icon}</span>
+      <span className={`shrink-0 transition-transform duration-200 ${isActive ? "text-[var(--vela-primary)] scale-110" : "group-hover:scale-105"}`}>
+        {icon}
+      </span>
       <span className="truncate">{children}</span>
+      {isActive && (
+        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--vela-primary)] shadow-[0_0_8px_var(--vela-primary)] shrink-0" />
+      )}
     </Link>
   )
 }

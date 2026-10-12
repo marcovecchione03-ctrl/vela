@@ -45,18 +45,23 @@ export default async function DashboardNewBookingPage() {
 
   return (
     <VelaThemeScope branding={tenant} className="w-full">
-      <DashboardPageShell variant="wide" className="space-y-6">
-        <div className="space-y-2">
-          <Link 
-            href="/dashboard/bookings" 
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-vela-foreground bg-vela-surface border border-vela-border px-3 py-1.5 rounded-full shadow-xs hover:bg-vela-surface-subtle transition-all cursor-pointer"
-          >
-            <span aria-hidden="true">&larr;</span>
-            <span>Back to Bookings</span>
-          </Link>
+      <DashboardPageShell variant="wide" className="space-y-6 sm:space-y-8">
+        {/* Spatial Floating Page Header */}
+        <div className="flex flex-col gap-3">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-vela-foreground">Manual Staff Booking</h1>
-            <p className="text-sm text-vela-muted-foreground mt-1">
+            <Link 
+              href="/dashboard/bookings" 
+              className="inline-flex items-center gap-2 text-xs font-semibold text-[var(--vela-foreground)] bg-white/60 hover:bg-white/90 backdrop-blur-xl border border-white/60 px-3.5 py-1.5 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.8)] transition-all cursor-pointer hover:shadow-sm hover:-translate-y-0.5 active:translate-y-0"
+            >
+              <span aria-hidden="true" className="text-sm leading-none">&larr;</span>
+              <span>Back to Bookings</span>
+            </Link>
+          </div>
+          <div className="space-y-1">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[var(--vela-foreground)]">
+              Manual Staff Booking
+            </h1>
+            <p className="text-xs sm:text-sm text-[var(--vela-muted-foreground)] max-w-xl font-normal leading-relaxed">
               Schedule an appointment directly on behalf of a walk-in, phone caller, or registered client.
             </p>
           </div>

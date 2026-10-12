@@ -81,7 +81,7 @@ export function MobileFloatingDock({ tenant, role }: MobileFloatingDockProps) {
         className="lg:hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-40 max-w-[calc(100vw-1.5rem)] w-auto"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
-        <div className="bg-[var(--vela-glass-strong)] backdrop-blur-2xl border border-[var(--vela-glass-border-strong)] shadow-[var(--vela-shadow-floating)] rounded-full px-2 py-1.5 flex items-center gap-1">
+        <div className="bg-[var(--vela-glass-strong)] backdrop-blur-3xl border border-white/60 shadow-[0_20px_40px_-6px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.85)] rounded-full px-2.5 py-1.5 flex items-center gap-1.5">
           <DockItem 
             href="/dashboard"
             icon={<LayoutDashboard className="w-4 h-4" />}
@@ -118,14 +118,17 @@ export function MobileFloatingDock({ tenant, role }: MobileFloatingDockProps) {
             aria-expanded={moreOpen}
             aria-haspopup="dialog"
             onClick={() => setMoreOpen(prev => !prev)}
-            className={`flex flex-col items-center justify-center min-w-[56px] min-h-[46px] px-2 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
+            className={`group relative flex flex-col items-center justify-center min-w-[54px] min-h-[46px] px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all duration-200 cursor-pointer ${
               moreOpen || isMoreItemActive
-                ? "bg-[var(--vela-active)] text-[var(--vela-foreground)] shadow-xs border border-[var(--vela-glass-border-strong)]"
-                : "text-[var(--vela-muted-foreground)] hover:text-[var(--vela-foreground)] hover:bg-[var(--vela-hover)]"
+                ? "text-[var(--vela-foreground)] shadow-[0_2px_8px_rgba(0,0,0,0.08),inset_0_1px_1.5px_rgba(255,255,255,0.9)] border border-[var(--vela-glass-border-strong)] bg-white/80 backdrop-blur-md"
+                : "text-[var(--vela-muted-foreground)] hover:text-[var(--vela-foreground)] hover:bg-white/40"
             }`}
+            style={(moreOpen || isMoreItemActive) ? {
+              backgroundColor: "color-mix(in srgb, var(--vela-primary) 12%, rgba(255, 255, 255, 0.85))"
+            } : undefined}
           >
-            <MoreHorizontal className="w-4 h-4" />
-            <span className="text-[10px] tracking-tight mt-0.5">More</span>
+            <MoreHorizontal className={`w-4 h-4 shrink-0 transition-transform ${(moreOpen || isMoreItemActive) ? "text-[var(--vela-primary)] scale-110" : "group-hover:scale-105"}`} />
+            <span className="tracking-tight mt-0.5">More</span>
           </button>
         </div>
       </nav>
@@ -136,22 +139,22 @@ export function MobileFloatingDock({ tenant, role }: MobileFloatingDockProps) {
           role="dialog"
           aria-modal="true"
           aria-label="Additional Navigation Options"
-          className="lg:hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-end sm:items-center justify-center p-3 animate-in fade-in duration-200"
+          className="lg:hidden fixed inset-0 z-50 bg-black/30 backdrop-blur-xs flex items-end sm:items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200"
           onClick={(e) => {
             if (e.target === e.currentTarget) setMoreOpen(false)
           }}
         >
           <div 
             ref={sheetRef}
-            className="w-full max-w-sm bg-[var(--vela-glass-strong)] backdrop-blur-2xl border border-[var(--vela-glass-border-strong)] shadow-[var(--vela-shadow-floating)] rounded-3xl p-5 space-y-4"
+            className="w-full max-w-sm bg-[var(--vela-glass-strong)] backdrop-blur-3xl border border-white/60 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.25),inset_0_1px_2px_rgba(255,255,255,0.85)] rounded-[32px] p-5 space-y-4"
             style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
           >
-            <div className="flex items-center justify-between pb-3 border-b border-[var(--vela-glass-border-muted)]">
+            <div className="flex items-center justify-between pb-3.5 border-b border-[var(--vela-glass-border-muted)]">
               <div>
-                <h3 className="font-bold text-sm text-[var(--vela-foreground)]">
+                <h3 className="font-bold text-sm text-[var(--vela-foreground)] tracking-tight">
                   More Options
                 </h3>
-                <p className="text-xs text-[var(--vela-muted-foreground)] truncate">
+                <p className="text-[11px] text-[var(--vela-muted-foreground)] truncate font-medium">
                   {tenant.name}
                 </p>
               </div>
@@ -159,13 +162,13 @@ export function MobileFloatingDock({ tenant, role }: MobileFloatingDockProps) {
                 type="button"
                 aria-label="Close menu"
                 onClick={() => setMoreOpen(false)}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--vela-muted-foreground)] hover:text-[var(--vela-foreground)] hover:bg-[var(--vela-hover)] transition-all cursor-pointer"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--vela-muted-foreground)] hover:text-[var(--vela-foreground)] bg-white/40 hover:bg-white/70 border border-white/50 transition-all cursor-pointer shadow-2xs"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="space-y-1 overflow-y-auto max-h-[60vh] py-1">
+            <div className="space-y-1.5 overflow-y-auto max-h-[60vh] py-1">
               {isStaff && (
                 <>
                   <SheetNavLink 
@@ -186,8 +189,8 @@ export function MobileFloatingDock({ tenant, role }: MobileFloatingDockProps) {
                     Analytics
                   </SheetNavLink>
 
-                  <div className="pt-2 my-2 border-t border-[var(--vela-glass-border-muted)]">
-                    <p className="px-3 text-[10px] font-semibold text-[var(--vela-muted-foreground)] uppercase tracking-wider mb-1.5">
+                  <div className="pt-2.5 my-2 border-t border-[var(--vela-glass-border-muted)]">
+                    <p className="px-3 text-[10px] font-semibold text-[var(--vela-muted-foreground)] uppercase tracking-wider mb-2">
                       Management
                     </p>
                     <SheetNavLink 
@@ -224,11 +227,11 @@ export function MobileFloatingDock({ tenant, role }: MobileFloatingDockProps) {
                 </>
               )}
 
-              <div className="pt-2 my-2 border-t border-[var(--vela-glass-border-muted)]">
+              <div className="pt-2.5 my-2 border-t border-[var(--vela-glass-border-muted)]">
                 <button
                   type="button"
                   onClick={() => signOut({ callbackUrl: "/auth/login" })}
-                  className="flex items-center gap-3 w-full px-3 py-2.5 text-xs font-semibold text-[var(--vela-muted-foreground)] rounded-xl hover:text-[var(--vela-foreground)] hover:bg-[var(--vela-hover)] transition-all cursor-pointer"
+                  className="flex items-center gap-3 w-full px-3.5 py-2.5 text-xs font-semibold text-[var(--vela-muted-foreground)] rounded-2xl hover:text-[var(--vela-foreground)] hover:bg-white/50 hover:shadow-2xs transition-all cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Sign Out</span>
@@ -257,14 +260,19 @@ function DockItem({
     <Link
       href={href}
       aria-current={isActive ? "page" : undefined}
-      className={`flex flex-col items-center justify-center min-w-[56px] min-h-[46px] px-2 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
+      className={`group relative flex flex-col items-center justify-center min-w-[54px] min-h-[46px] px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all duration-200 cursor-pointer ${
         isActive
-          ? "bg-[var(--vela-active)] text-[var(--vela-foreground)] shadow-xs border border-[var(--vela-glass-border-strong)]"
-          : "text-[var(--vela-muted-foreground)] hover:text-[var(--vela-foreground)] hover:bg-[var(--vela-hover)]"
+          ? "text-[var(--vela-foreground)] shadow-[0_2px_8px_rgba(0,0,0,0.08),inset_0_1px_1.5px_rgba(255,255,255,0.9)] border border-[var(--vela-glass-border-strong)] bg-white/80 backdrop-blur-md"
+          : "text-[var(--vela-muted-foreground)] hover:text-[var(--vela-foreground)] hover:bg-white/40"
       }`}
+      style={isActive ? {
+        backgroundColor: "color-mix(in srgb, var(--vela-primary) 12%, rgba(255, 255, 255, 0.85))"
+      } : undefined}
     >
-      <span className="shrink-0">{icon}</span>
-      <span className="text-[10px] tracking-tight mt-0.5 truncate">{label}</span>
+      <span className={`shrink-0 transition-transform duration-200 ${isActive ? "text-[var(--vela-primary)] scale-110" : "group-hover:scale-105"}`}>
+        {icon}
+      </span>
+      <span className="tracking-tight mt-0.5 truncate">{label}</span>
     </Link>
   )
 }
@@ -287,11 +295,14 @@ function SheetNavLink({
       href={href}
       aria-current={isActive ? "page" : undefined}
       onClick={onClick}
-      className={`flex items-center gap-3 px-3.5 py-2.5 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
+      className={`flex items-center gap-3 px-3.5 py-2.5 text-xs font-semibold rounded-2xl transition-all duration-200 cursor-pointer ${
         isActive
-          ? "bg-[var(--vela-active)] text-[var(--vela-foreground)] shadow-xs border border-[var(--vela-glass-border-strong)]"
-          : "text-[var(--vela-muted-foreground)] hover:text-[var(--vela-foreground)] hover:bg-[var(--vela-hover)]"
+          ? "text-[var(--vela-foreground)] shadow-[0_2px_8px_rgba(0,0,0,0.06),inset_0_1px_1.5px_rgba(255,255,255,0.9)] border border-[var(--vela-glass-border-strong)] bg-white/80 backdrop-blur-md"
+          : "text-[var(--vela-muted-foreground)] hover:text-[var(--vela-foreground)] hover:bg-white/40"
       }`}
+      style={isActive ? {
+        backgroundColor: "color-mix(in srgb, var(--vela-primary) 10%, rgba(255, 255, 255, 0.8))"
+      } : undefined}
     >
       <span className="shrink-0">{icon}</span>
       <span className="truncate">{children}</span>

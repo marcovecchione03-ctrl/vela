@@ -431,4 +431,74 @@ describe("Vela Liquid Glass Design System & Navigation (Step 4N)", () => {
     expect(analyticsCode).toContain('DashboardPageShell')
     expect(analyticsCode).toContain('variant="wide"')
   })
+
+  // =========================================================================
+  // STEP 4N-C: HIGH-FIDELITY LIQUID GLASS ART DIRECTION TESTS
+  // =========================================================================
+
+  it("4N-C.1: Desktop navigation renders as a floating glass island with tactile active capsule", () => {
+    mockPathname.mockReturnValue("/dashboard/bookings")
+    const desktopHtml = renderToStaticMarkup(
+      React.createElement(DesktopSidebar, {
+        tenant: { id: "t-1", name: "Studio Luxe" },
+        role: "OWNER"
+      })
+    )
+
+    // Floating island geometry: inset from viewport edges, sticky, rounded shell
+    expect(desktopHtml).toContain("rounded-[30px]")
+    expect(desktopHtml).toContain("sticky top-4")
+    expect(desktopHtml).toContain("h-[calc(100vh-2rem)]")
+    expect(desktopHtml).toContain("backdrop-blur-3xl")
+
+    // Active item renders as a floating liquid glass capsule
+    expect(desktopHtml).toContain("backdrop-blur-md")
+    expect(desktopHtml).toContain('aria-current="page"')
+    expect(desktopHtml).toContain("color-mix")
+  })
+
+  it("4N-C.2: Mobile floating dock renders with tactile liquid active capsule and signature glass depth", () => {
+    mockPathname.mockReturnValue("/dashboard/calendar")
+    const mobileHtml = renderToStaticMarkup(
+      React.createElement(MobileFloatingDock, {
+        tenant: { id: "t-1", name: "Studio Luxe" },
+        role: "OWNER"
+      })
+    )
+
+    expect(mobileHtml).toContain("backdrop-blur-3xl")
+    expect(mobileHtml).toContain("rounded-full")
+    expect(mobileHtml).toContain('aria-current="page"')
+    expect(mobileHtml).toContain("color-mix")
+  })
+
+  it("4N-C.3: GlassPanel supports 3-level material system with specular reflection edges", () => {
+    const l1 = renderToStaticMarkup(
+      React.createElement(GlassPanel, { level: 1 }, "L1 Subtle")
+    )
+    expect(l1).toContain("bg-[var(--vela-glass-subtle)]")
+
+    const l2 = renderToStaticMarkup(
+      React.createElement(GlassPanel, { level: 2 }, "L2 Panel")
+    )
+    expect(l2).toContain("bg-[var(--vela-glass)]")
+    expect(l2).toContain("before:bg-gradient-to-r")
+
+    const l3 = renderToStaticMarkup(
+      React.createElement(GlassPanel, { level: 3 }, "L3 Floating")
+    )
+    expect(l3).toContain("bg-[var(--vela-glass-strong)]")
+    expect(l3).toContain("backdrop-blur-2xl")
+  })
+
+  it("4N-C.4: Dashboard layout includes atmospheric multi-layered environmental illumination", () => {
+    const layoutCode = fs.readFileSync(
+      path.join(__dirname, "../../src/app/(dashboard)/layout.tsx"),
+      "utf-8"
+    )
+    expect(layoutCode).toContain("var(--vela-ambient-glow)")
+    expect(layoutCode).toContain("var(--vela-secondary)")
+    expect(layoutCode).toContain("radial-gradient")
+  })
 })
+
