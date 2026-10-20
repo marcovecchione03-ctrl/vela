@@ -6,12 +6,21 @@ import * as path from "path"
 import ManualBookingForm from "@/app/(dashboard)/dashboard/bookings/new/ManualBookingForm"
 import DashboardNewBookingPage from "@/app/(dashboard)/dashboard/bookings/new/page"
 import { BRANDING_PRESETS } from "@/modules/tenant/presets"
+import { DesktopSidebar } from "@/components/dashboard/DesktopSidebar"
+import { MobileFloatingDock } from "@/components/dashboard/MobileFloatingDock"
+import { VelaThemeScope } from "@/components/theme/VelaThemeScope"
+import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell"
 
 // Mock dependencies
 vi.mock("next/navigation", () => ({
+  usePathname: () => "/dashboard/bookings/new",
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
   redirect: vi.fn(),
   notFound: vi.fn()
+}))
+
+vi.mock("next-auth/react", () => ({
+  signOut: vi.fn()
 }))
 
 vi.mock("next-auth", () => ({
@@ -317,5 +326,37 @@ describe("Manual Staff Booking UI (Step 4M-B)", () => {
     )
     expect(onboardingCode).toContain("OnboardingWizard")
     expect(onboardingCode).toContain("BRANDING_PRESETS")
+  })
+
+  // =========================================================================
+  // STEP 4O: FIGMA-AUTHORED MANUAL BOOKING STRUCTURE TESTS
+  // =========================================================================
+
+  it("4O.E: Manual Booking page and form render with Figma-authored Italian structure and local assets", () => {
+    const html = renderToStaticMarkup(
+      React.createElement(ManualBookingForm, {
+        tenantId: "tenant-1",
+        userId: "user-1",
+        locations: mockLocations,
+        services: mockServices,
+        employees: mockEmployees,
+        customers: mockCustomers,
+        role: "OWNER"
+      })
+    )
+
+    expect(html).toContain("Dettagli prenotazione")
+    expect(html).toContain("Sede")
+    expect(html).toContain("Servizio")
+    expect(html).toContain("Operatore")
+    expect(html).toContain("Data e orario")
+    expect(html).toContain("Cliente")
+    expect(html).toContain("Cliente registrato")
+    expect(html).toContain("Cliente occasionale")
+    expect(html).toContain("Cerca un cliente...")
+    expect(html).toContain("Seleziona")
+    expect(html).toContain("Crea prenotazione")
+    expect(html).toContain("Salva Bozza")
+    expect(html).not.toContain("localhost:3845")
   })
 })

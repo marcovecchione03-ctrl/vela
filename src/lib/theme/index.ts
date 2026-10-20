@@ -34,6 +34,13 @@ export interface VelaThemeTokens {
   active: string
   hover: string
   ambientGlow: string
+  // Figma-Authored Liquid Glass Material Tokens (Step 4O)
+  glassSubtleFill: string
+  glassPanelFill: string
+  glassFloatingFill: string
+  liquidGradient: string
+  liquidGlow: string
+  liquidGlowLg: string
 }
 
 export function parseHex(hex: string): [number, number, number] {
@@ -209,6 +216,25 @@ export function computeVelaTheme(branding?: TenantBranding | null): VelaThemeTok
   const hover = toRgba(foreground, 0.05)
   const ambientGlow = toRgba(primary, 0.04)
 
+  // Figma-Authored 3-Level Glass Material System & Liquid Primary Mapping
+  const glassSubtleFill = "rgba(211, 211, 211, 0.15)"
+  const glassPanelFill = "rgba(213, 213, 213, 0.20)"
+  const glassFloatingFill = "rgba(213, 213, 213, 0.20)"
+
+  const [pr, pg, pb] = parseHex(primary)
+  const chroma = Math.max(pr, pg, pb) - Math.min(pr, pg, pb)
+  const isChromatic = chroma >= 24 && primary.toUpperCase() !== "#297BFF"
+
+  const stop1 = isChromatic ? toRgba(blendHex(primary, "#297BFF", 0.65), 0.42) : "rgba(41, 123, 255, 0.4)"
+  const stop2 = isChromatic ? toRgba(blendHex(primary, "#5665E9", 0.55), 0.42) : "rgba(86, 101, 233, 0.4)"
+  const stop3 = isChromatic ? toRgba(blendHex(secondary, "#9A7DDE", 0.60), 0.42) : "rgba(154, 125, 222, 0.4)"
+  const stop4 = isChromatic ? toRgba(blendHex(secondary, "#E1B0D7", 0.55), 0.42) : "rgba(225, 176, 215, 0.4)"
+
+  const liquidGradient = `linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 100%), linear-gradient(13.635deg, ${stop1} 14.063%, ${stop2} 47.24%, ${stop3} 69.359%, ${stop4} 87.791%), linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.1) 100%)`
+  const glowColor = isChromatic ? toRgba(blendHex(primary, "#3977FF", 0.45), 0.35) : "rgba(57, 119, 255, 0.35)"
+  const liquidGlow = `0px 8px 24px 0px ${glowColor}`
+  const liquidGlowLg = `0px 15.68px 47.04px 0px ${glowColor}`
+
   return {
     primary,
     primaryForeground,
@@ -234,7 +260,13 @@ export function computeVelaTheme(branding?: TenantBranding | null): VelaThemeTok
     shadowFloating,
     active,
     hover,
-    ambientGlow
+    ambientGlow,
+    glassSubtleFill,
+    glassPanelFill,
+    glassFloatingFill,
+    liquidGradient,
+    liquidGlow,
+    liquidGlowLg
   }
 }
 
@@ -266,5 +298,13 @@ export function getVelaThemeStyles(branding?: TenantBranding | null): React.CSSP
     "--vela-active": tokens.active,
     "--vela-hover": tokens.hover,
     "--vela-ambient-glow": tokens.ambientGlow,
+    "--pulsantiglass": tokens.glassSubtleFill,
+    "--textdeselected": "#8c95a9",
+    "--vela-figma-glass-subtle": tokens.glassSubtleFill,
+    "--vela-figma-glass-panel": tokens.glassPanelFill,
+    "--vela-figma-glass-floating": tokens.glassFloatingFill,
+    "--vela-liquid-gradient": tokens.liquidGradient,
+    "--vela-liquid-glow": tokens.liquidGlow,
+    "--vela-liquid-glow-lg": tokens.liquidGlowLg,
   } as React.CSSProperties
 }

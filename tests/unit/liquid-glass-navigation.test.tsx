@@ -500,5 +500,67 @@ describe("Vela Liquid Glass Design System & Navigation (Step 4N)", () => {
     expect(layoutCode).toContain("var(--vela-secondary)")
     expect(layoutCode).toContain("radial-gradient")
   })
+
+  // =========================================================================
+  // STEP 4O: FIGMA-AUTHORED VELA UI TESTS
+  // =========================================================================
+
+  it("4O.A: Desktop sidebar renders the Figma-authored navigation structure and local assets", () => {
+    mockPathname.mockReturnValue("/dashboard/bookings")
+    const html = renderToStaticMarkup(
+      React.createElement(DesktopSidebar, {
+        tenant: { id: "t-1", name: "Antonio's Cut" },
+        role: "OWNER"
+      })
+    )
+
+    expect(html).toContain("/figma/logo-antonios-cut.png")
+    expect(html).toContain("Panoramica")
+    expect(html).toContain("Calendario")
+    expect(html).toContain("Prenotazioni")
+    expect(html).toContain("Clienti")
+    expect(html).toContain("Servizi")
+    expect(html).toContain("Team")
+    expect(html).toContain("Statistiche")
+    expect(html).toContain("Impostazioni")
+    expect(html).toContain("Esci")
+    expect(html).toContain("vela-liquid-primary")
+    expect(html).not.toContain("localhost:3845")
+  })
+
+  it("4O.B: Mobile floating dock renders the Figma-authored navigation structure and central + button", () => {
+    const html = renderToStaticMarkup(
+      React.createElement(MobileFloatingDock, {
+        tenant: { id: "t-1", name: "Antonio's Cut" },
+        role: "OWNER"
+      })
+    )
+
+    expect(html).toContain("/figma/dock-plus-pulsante.svg")
+    expect(html).toContain("rounded-[53px]")
+    expect(html).toContain("Overview")
+    expect(html).toContain("Calendar")
+    expect(html).toContain("Clients")
+    expect(html).toContain("More")
+    expect(html).not.toContain("localhost:3845")
+  })
+
+  it("4O.L: No runtime dependency on temporary localhost:3845 asset URLs exists in production src/", () => {
+    const filesToCheck = [
+      "src/app/(dashboard)/layout.tsx",
+      "src/components/dashboard/DesktopSidebar.tsx",
+      "src/components/dashboard/MobileFloatingDock.tsx",
+      "src/app/(dashboard)/dashboard/bookings/new/page.tsx",
+      "src/app/(dashboard)/dashboard/bookings/new/ManualBookingForm.tsx",
+      "src/components/ui/GlassPanel.tsx",
+      "src/app/globals.css",
+      "src/lib/theme/index.ts"
+    ]
+
+    for (const relPath of filesToCheck) {
+      const content = fs.readFileSync(path.join(__dirname, "../../", relPath), "utf-8")
+      expect(content).not.toContain("localhost:3845")
+    }
+  })
 })
 

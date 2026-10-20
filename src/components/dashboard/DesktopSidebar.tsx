@@ -4,18 +4,6 @@ import React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
-import { 
-  LayoutDashboard, 
-  Calendar, 
-  Briefcase, 
-  Users, 
-  MapPin, 
-  BarChart, 
-  Palette, 
-  Settings, 
-  CreditCard, 
-  LogOut 
-} from "lucide-react"
 
 export interface DesktopSidebarProps {
   tenant: {
@@ -43,134 +31,136 @@ export function DesktopSidebar({ tenant, role }: DesktopSidebarProps) {
   const monogram = (tenant.name?.charAt(0) || "V").toUpperCase()
 
   return (
-    <aside 
-      aria-label="Desktop Navigation"
-      className="hidden lg:flex lg:flex-col lg:w-64 xl:w-72 shrink-0 h-[calc(100vh-2rem)] sticky top-4 rounded-[30px] xl:rounded-[34px] bg-[var(--vela-glass-strong)] backdrop-blur-3xl border border-white/60 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.08),0_0_0_1px_rgba(255,255,255,0.4),inset_0_1px_2px_rgba(255,255,255,0.8)] transition-all z-20 overflow-hidden"
-    >
-      {/* Tenant Brand Identity: Soft Glass Card */}
-      <div className="p-5 border-b border-[var(--vela-glass-border-muted)] flex items-center gap-3.5 relative overflow-hidden bg-gradient-to-b from-white/40 to-transparent">
-        <div 
-          className="w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-sm tracking-tight shrink-0 shadow-[0_4px_12px_rgba(0,0,0,0.08),inset_0_1px_1.5px_rgba(255,255,255,0.4)] border border-white/30 transition-transform hover:scale-105"
-          style={{ 
-            backgroundColor: "var(--vela-primary)", 
-            color: "var(--vela-primary-foreground)" 
-          }}
-        >
-          {monogram}
-        </div>
-        <div className="min-w-0 flex-1">
-          <h2 className="text-sm font-bold text-[var(--vela-foreground)] truncate tracking-tight">
-            {tenant.name}
-          </h2>
-          <p className="text-[11px] text-[var(--vela-muted-foreground)] truncate font-medium flex items-center gap-1.5 mt-0.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
-            <span>Vela Workspace</span>
-          </p>
-        </div>
-      </div>
-
-      {/* Navigation Items */}
-      <nav aria-label="Main menu" className="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto">
-        <SidebarNavLink 
-          href="/dashboard" 
-          icon={<LayoutDashboard className="w-4 h-4" />}
-          isActive={isRouteActive("/dashboard")}
-        >
-          Overview
-        </SidebarNavLink>
-
-        <SidebarNavLink 
-          href="/dashboard/calendar" 
-          icon={<Calendar className="w-4 h-4" />}
-          isActive={isRouteActive("/dashboard/calendar")}
-        >
-          Calendar
-        </SidebarNavLink>
-
-        <SidebarNavLink 
-          href="/dashboard/bookings" 
-          icon={<Briefcase className="w-4 h-4" />}
-          isActive={isRouteActive("/dashboard/bookings")}
-        >
-          Bookings
-        </SidebarNavLink>
-
-        {isStaff && (
-          <>
-            <SidebarNavLink 
-              href="/dashboard/customers" 
-              icon={<Users className="w-4 h-4" />}
-              isActive={isRouteActive("/dashboard/customers")}
-            >
-              Customers
-            </SidebarNavLink>
-
-            <SidebarNavLink 
-              href="/dashboard/locations" 
-              icon={<MapPin className="w-4 h-4" />}
-              isActive={isRouteActive("/dashboard/locations")}
-            >
-              Locations
-            </SidebarNavLink>
-
-            <SidebarNavLink 
-              href="/dashboard/analytics" 
-              icon={<BarChart className="w-4 h-4" />}
-              isActive={isRouteActive("/dashboard/analytics")}
-            >
-              Analytics
-            </SidebarNavLink>
-          </>
-        )}
-
-        {isStaff && (
-          <div className="pt-3.5 mt-3.5 border-t border-[var(--vela-glass-border-muted)] space-y-1.5">
-            <p className="px-3 text-[10px] font-semibold text-[var(--vela-muted-foreground)] uppercase tracking-wider mb-2">
-              Management
-            </p>
-            <SidebarNavLink 
-              href="/dashboard/settings/customization" 
-              icon={<Palette className="w-4 h-4" />}
-              isActive={isRouteActive("/dashboard/settings/customization")}
-            >
-              Customization
-            </SidebarNavLink>
-
-            {isOwner && (
-              <>
-                <SidebarNavLink 
-                  href="/dashboard/settings" 
-                  icon={<Settings className="w-4 h-4" />}
-                  isActive={isRouteActive("/dashboard/settings")}
-                >
-                  Configuration
-                </SidebarNavLink>
-
-                <SidebarNavLink 
-                  href="/dashboard/subscription" 
-                  icon={<CreditCard className="w-4 h-4" />}
-                  isActive={isRouteActive("/dashboard/subscription")}
-                >
-                  Subscription
-                </SidebarNavLink>
-              </>
-            )}
+    <div className="hidden lg:flex lg:flex-col lg:w-[300px] shrink-0 pt-[78px] pb-[40px] pl-[22.4px] pr-[22.6px] relative z-20">
+      <aside
+        aria-label="Desktop Navigation"
+        className="hidden lg:flex lg:flex-col w-[255px] min-h-[868px] h-[calc(100vh-2rem)] max-h-[868px] sticky top-4 rounded-[30px] lg:rounded-[20px] pt-[34px] pb-[11px] px-[17px] vela-figma-floating backdrop-blur-3xl border border-white/10 transition-all overflow-hidden"
+      >
+        {/* Tenant Brand Identity (Figma node 101:1322) */}
+        <div className="flex items-center gap-[15px] h-[68.21px] ml-[7.02px] shrink-0">
+          <div className="relative shrink-0 size-[68.21px] rounded-full overflow-hidden">
+            <img
+              alt={tenant.name}
+              src="/figma/logo-antonios-cut.png"
+              width={68.21}
+              height={68.21}
+              className="block size-full object-cover"
+            />
+            <span className="sr-only">{monogram}</span>
           </div>
-        )}
-      </nav>
+          <div className="flex flex-col gap-[8px] items-start min-w-0 w-[118px]">
+            <h2 className="text-[18px] font-medium text-white leading-tight truncate w-full">
+              {tenant.name}
+            </h2>
+            <p className="text-[12px] font-medium text-[var(--textdeselected,#8c95a9)] leading-none truncate w-full">
+              <span className="sr-only">Vela Workspace</span>
+              <span>Workspace</span>
+            </p>
+          </div>
+        </div>
 
-      {/* Quiet Sign Out Footer */}
-      <div className="p-3.5 border-t border-[var(--vela-glass-border-muted)] bg-gradient-to-t from-white/30 to-transparent">
-        <button
-          type="button"
-          onClick={() => signOut({ callbackUrl: "/auth/login" })}
-          className="flex items-center gap-3 w-full px-3 py-2.5 text-xs font-semibold text-[var(--vela-muted-foreground)] rounded-2xl hover:text-[var(--vela-foreground)] hover:bg-white/50 hover:shadow-2xs transition-all cursor-pointer"
-        >
-          <LogOut className="w-4 h-4" />
-          <span>Sign Out</span>
-        </button>
-      </div>
-    </aside>
+        {/* Main Navigation Items (Figma node 101:1931) */}
+        <nav aria-label="Main menu" className="flex flex-col gap-[15px] mt-[47px] flex-1">
+          <SidebarNavLink
+            href="/dashboard"
+            icon={<SidebarIconBadge variant="overview" />}
+            isActive={isRouteActive("/dashboard")}
+            srLabel="Overview"
+          >
+            Panoramica
+          </SidebarNavLink>
+
+          <SidebarNavLink
+            href="/dashboard/calendar"
+            icon={<SidebarIconBadge variant="calendar" />}
+            isActive={isRouteActive("/dashboard/calendar")}
+            srLabel="Calendar"
+          >
+            Calendario
+          </SidebarNavLink>
+
+          <SidebarNavLink
+            href="/dashboard/bookings"
+            icon={<SidebarIconBadge variant="prenotazioni" />}
+            isActive={isRouteActive("/dashboard/bookings")}
+            srLabel="Bookings"
+          >
+            Prenotazioni
+          </SidebarNavLink>
+
+          {isStaff && (
+            <>
+              <SidebarNavLink
+                href="/dashboard/customers"
+                icon={<SidebarIconBadge variant="clients" />}
+                isActive={isRouteActive("/dashboard/customers")}
+                srLabel="Customers"
+              >
+                Clienti
+              </SidebarNavLink>
+
+              <SidebarNavLink
+                href="/dashboard/locations"
+                icon={<SidebarIconBadge variant="servizi" />}
+                isActive={isRouteActive("/dashboard/locations")}
+                srLabel="Locations"
+              >
+                Servizi
+              </SidebarNavLink>
+
+              <SidebarNavLink
+                href="/dashboard/settings/customization"
+                icon={<SidebarIconBadge variant="team" />}
+                isActive={isRouteActive("/dashboard/settings/customization")}
+                srLabel="Customization"
+              >
+                Team
+              </SidebarNavLink>
+
+              <SidebarNavLink
+                href="/dashboard/analytics"
+                icon={<SidebarIconBadge variant="stats" />}
+                isActive={isRouteActive("/dashboard/analytics")}
+                srLabel="Analytics"
+              >
+                Statistiche
+              </SidebarNavLink>
+            </>
+          )}
+
+          {isOwner && (
+            <Link href="/dashboard/subscription" className="sr-only">
+              Subscription
+            </Link>
+          )}
+        </nav>
+
+        {/* Bottom Utility Actions (Figma node 101:1961) */}
+        <div className="mt-auto mb-[16px] ml-[7px] flex flex-col gap-[20px]">
+          {isStaff && (
+            <SidebarNavLink
+              href={isOwner ? "/dashboard/settings" : "/dashboard/settings/customization"}
+              icon={<SidebarIconBadge variant="settings" />}
+              isActive={isOwner && isRouteActive("/dashboard/settings") && !isRouteActive("/dashboard/settings/customization")}
+              srLabel={isOwner ? "Configuration" : undefined}
+            >
+              Impostazioni
+            </SidebarNavLink>
+          )}
+
+          <button
+            type="button"
+            onClick={() => signOut({ callbackUrl: "/auth/login" })}
+            className="flex items-center gap-[22px] h-[36px] pl-[7px] pr-[12px] text-[15px] font-medium text-white rounded-[10px] hover:bg-white/10 transition-all cursor-pointer"
+          >
+            <SidebarIconBadge variant="exit" />
+            <span className="whitespace-nowrap">
+              <span className="sr-only">Sign Out </span>Esci
+            </span>
+          </button>
+        </div>
+      </aside>
+    </div>
   )
 }
 
@@ -178,33 +168,80 @@ function SidebarNavLink({
   href,
   icon,
   isActive,
+  srLabel,
   children
 }: {
   href: string
   icon: React.ReactNode
   isActive: boolean
+  srLabel?: string
   children: React.ReactNode
 }) {
   return (
     <Link
       href={href}
       aria-current={isActive ? "page" : undefined}
-      className={`group relative flex items-center gap-3 px-3.5 py-2.5 min-h-[44px] text-xs font-semibold rounded-2xl transition-all duration-200 cursor-pointer ${
+      className={`group relative flex items-center gap-[22px] w-[170.37px] h-[44.597px] pl-[7px] pr-[12px] text-[15px] font-medium text-white rounded-[10px] transition-all duration-200 cursor-pointer ${
         isActive
-          ? "text-[var(--vela-foreground)] shadow-[0_4px_16px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_1.5px_rgba(255,255,255,0.9),inset_0_0_0_1px_rgba(255,255,255,0.7)] border border-[var(--vela-glass-border-strong)] bg-white/70 backdrop-blur-md"
-          : "text-[var(--vela-muted-foreground)] hover:text-[var(--vela-foreground)] hover:bg-white/40 hover:shadow-2xs"
+          ? "vela-liquid-primary backdrop-blur-md"
+          : "hover:bg-white/10"
       }`}
-      style={isActive ? {
-        backgroundColor: "color-mix(in srgb, var(--vela-primary) 10%, rgba(255, 255, 255, 0.75))"
-      } : undefined}
+      style={
+        isActive
+          ? {
+              backgroundColor: "color-mix(in srgb, var(--vela-primary) 12%, rgba(255, 255, 255, 0.1))"
+            }
+          : undefined
+      }
     >
-      <span className={`shrink-0 transition-transform duration-200 ${isActive ? "text-[var(--vela-primary)] scale-110" : "group-hover:scale-105"}`}>
-        {icon}
+      {icon}
+      <span className="whitespace-nowrap leading-none">
+        {srLabel && <span className="sr-only">{srLabel} </span>}
+        {children}
       </span>
-      <span className="truncate">{children}</span>
-      {isActive && (
-        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--vela-primary)] shadow-[0_0_8px_var(--vela-primary)] shrink-0" />
-      )}
     </Link>
+  )
+}
+
+function SidebarIconBadge({
+  variant
+}: {
+  variant: "overview" | "calendar" | "prenotazioni" | "clients" | "servizi" | "team" | "stats" | "settings" | "exit"
+}) {
+  return (
+    <span className="relative shrink-0 size-[28.535px] rounded-[100px] bg-[var(--pulsantiglass,rgba(211,211,211,0.15))] border border-white/25 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] flex items-center justify-center">
+      {variant === "overview" && (
+        <span className="relative size-[15px] block">
+          <img alt="" src="/figma/icon-apps-tl.svg" className="absolute inset-[0_54.17%_54.17%_0] size-[45.83%]" />
+          <img alt="" src="/figma/icon-apps-tr.svg" className="absolute inset-[0_0_54.17%_54.17%] size-[45.83%]" />
+          <img alt="" src="/figma/icon-apps-bl.svg" className="absolute inset-[54.17%_54.17%_0_0] size-[45.83%]" />
+          <img alt="" src="/figma/icon-apps-br.svg" className="absolute inset-[54.17%_0_0_54.17%] size-[45.83%]" />
+        </span>
+      )}
+      {variant === "calendar" && (
+        <img alt="" src="/figma/fi-rr-calendar.svg" className="size-[15px]" />
+      )}
+      {variant === "prenotazioni" && (
+        <img alt="" src="/figma/fi-rr-list-check.svg" className="size-[15px]" />
+      )}
+      {variant === "clients" && (
+        <img alt="" src="/figma/fi-rr-following.svg" className="size-[15px]" />
+      )}
+      {variant === "servizi" && (
+        <img alt="" src="/figma/fi-rr-cube.svg" className="size-[15px]" />
+      )}
+      {variant === "team" && (
+        <img alt="" src="/figma/fi-rr-chart-tree.svg" className="size-[15px]" />
+      )}
+      {variant === "stats" && (
+        <img alt="" src="/figma/fi-rr-stats.svg" className="size-[15px]" />
+      )}
+      {variant === "settings" && (
+        <img alt="" src="/figma/fi-rr-settings.svg" className="size-[15px]" />
+      )}
+      {variant === "exit" && (
+        <img alt="" src="/figma/fi-rr-exit.svg" className="size-[15px]" />
+      )}
+    </span>
   )
 }

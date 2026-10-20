@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import {
   computeDayAvailability,
   getEffectiveConcurrency,
@@ -10,6 +10,14 @@ import {
 } from "../../src/lib/booking-engine/availability"
 
 describe("Phase 5: Booking Engine Pure Logic", () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date("2026-10-01T08:00:00Z"))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
   describe("Duration & Concurrency", () => {
     it("1. 45-minute service occupies 45 minutes", () => {
       const eff = getEffectiveDuration([{ durationMinutes: 45 }])
