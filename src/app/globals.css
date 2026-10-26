@@ -42,6 +42,23 @@
   --vela-liquid-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 100%), linear-gradient(13.635deg, rgba(41, 123, 255, 0.4) 14.063%, rgba(86, 101, 233, 0.4) 47.24%, rgba(154, 125, 222, 0.4) 69.359%, rgba(225, 176, 215, 0.4) 87.791%), linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.1) 100%);
   --vela-liquid-glow: 0px 8px 24px 0px rgba(57, 119, 255, 0.35);
   --vela-liquid-glow-lg: 0px 15.68px 47.04px 0px rgba(57, 119, 255, 0.35);
+
+  /* Semantic Functional Booking Status Tokens (Step 4P) */
+  --vela-status-confirmed-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 100%), linear-gradient(18.25756307538974deg, rgba(32, 186, 114, 0.62) 14.063%, rgba(50, 187, 43, 0.62) 47.24%, rgba(45, 186, 73, 0.62) 69.359%, rgba(35, 203, 52, 0.62) 87.791%), linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.1) 100%);
+  --vela-status-confirmed-border: rgba(0, 164, 41, 0.44);
+  --vela-status-confirmed-fg: #ffffff;
+
+  --vela-status-active-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 100%), linear-gradient(18.25756307538974deg, rgba(255, 177, 59, 0.62) 14.063%, rgba(227, 134, 3, 0.62) 47.24%, rgba(227, 132, 0, 0.62) 69.359%, rgba(238, 155, 30, 0.62) 87.791%), linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.1) 100%);
+  --vela-status-active-border: rgba(255, 138, 4, 0.44);
+  --vela-status-active-fg: #ffffff;
+
+  --vela-status-completed-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 100%), linear-gradient(18.25756307538974deg, rgba(64, 155, 234, 0.62) 14.063%, rgba(28, 116, 184, 0.62) 47.24%, rgba(45, 139, 186, 0.62) 69.359%, rgba(35, 94, 203, 0.62) 87.791%), linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.1) 100%);
+  --vela-status-completed-border: rgba(3, 162, 255, 0.44);
+  --vela-status-completed-fg: #ffffff;
+
+  --vela-status-cancelled-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 100%), linear-gradient(18.25756307538974deg, rgba(221, 29, 29, 0.62) 14.063%, rgba(239, 35, 38, 0.62) 47.24%, rgba(184, 0, 0, 0.62) 69.359%, rgba(183, 14, 14, 0.62) 87.791%), linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.1) 100%);
+  --vela-status-cancelled-border: rgba(230, 7, 7, 0.44);
+  --vela-status-cancelled-fg: #ffffff;
 }
 
 @theme inline {
@@ -161,4 +178,41 @@ body {
     -webkit-backdrop-filter: blur(24px) saturate(150%);
   }
 }
+
+/* Semantic Booking Status Capsules (Step 4P — Figma Component 2/6/9) */
+.vela-status-capsule {
+  border-style: solid;
+  border-width: 1px;
+  box-shadow:
+    var(--vela-liquid-glow, 0px 8px 24px 0px rgba(57, 119, 255, 0.35)),
+    inset 0px -3px 8px 0px rgba(80, 55, 129, 0.17),
+    inset 0px 1px 2px 0px rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(16px) saturate(145%);
+  -webkit-backdrop-filter: blur(16px) saturate(145%);
+}
+
+.vela-status-confirmed {
+  background-image: var(--vela-status-confirmed-bg);
+  border-color: var(--vela-status-confirmed-border, rgba(0, 164, 41, 0.44));
+  color: var(--vela-status-confirmed-fg, #ffffff);
+}
+
+.vela-status-active {
+  background-image: var(--vela-status-active-bg);
+  border-color: var(--vela-status-active-border, rgba(255, 138, 4, 0.44));
+  color: var(--vela-status-active-fg, #ffffff);
+}
+
+.vela-status-completed {
+  background-image: var(--vela-status-completed-bg);
+  border-color: var(--vela-status-completed-border, rgba(3, 162, 255, 0.44));
+  color: var(--vela-status-completed-fg, #ffffff);
+}
+
+.vela-status-cancelled {
+  background-image: var(--vela-status-cancelled-bg);
+  border-color: var(--vela-status-cancelled-border, rgba(230, 7, 7, 0.44));
+  color: var(--vela-status-cancelled-fg, #ffffff);
+}
+
 

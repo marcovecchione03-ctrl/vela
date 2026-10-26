@@ -41,6 +41,19 @@ export interface VelaThemeTokens {
   liquidGradient: string
   liquidGlow: string
   liquidGlowLg: string
+  // Semantic Booking Status Tokens (Step 4P)
+  statusConfirmedBg: string
+  statusConfirmedBorder: string
+  statusConfirmedFg: string
+  statusActiveBg: string
+  statusActiveBorder: string
+  statusActiveFg: string
+  statusCompletedBg: string
+  statusCompletedBorder: string
+  statusCompletedFg: string
+  statusCancelledBg: string
+  statusCancelledBorder: string
+  statusCancelledFg: string
 }
 
 export function parseHex(hex: string): [number, number, number] {
@@ -235,6 +248,27 @@ export function computeVelaTheme(branding?: TenantBranding | null): VelaThemeTok
   const liquidGlow = `0px 8px 24px 0px ${glowColor}`
   const liquidGlowLg = `0px 15.68px 47.04px 0px ${glowColor}`
 
+  // Semantic Functional Booking Status Tokens (Step 4P — Figma Component 2/6/9)
+  const statusConfirmedBg =
+    "linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 100%), linear-gradient(18.25756307538974deg, rgba(32, 186, 114, 0.62) 14.063%, rgba(50, 187, 43, 0.62) 47.24%, rgba(45, 186, 73, 0.62) 69.359%, rgba(35, 203, 52, 0.62) 87.791%), linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.1) 100%)"
+  const statusConfirmedBorder = "rgba(0, 164, 41, 0.44)"
+  const statusConfirmedFg = "#ffffff"
+
+  const statusActiveBg =
+    "linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 100%), linear-gradient(18.25756307538974deg, rgba(255, 177, 59, 0.62) 14.063%, rgba(227, 134, 3, 0.62) 47.24%, rgba(227, 132, 0, 0.62) 69.359%, rgba(238, 155, 30, 0.62) 87.791%), linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.1) 100%)"
+  const statusActiveBorder = "rgba(255, 138, 4, 0.44)"
+  const statusActiveFg = "#ffffff"
+
+  const statusCompletedBg =
+    "linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 100%), linear-gradient(18.25756307538974deg, rgba(64, 155, 234, 0.62) 14.063%, rgba(28, 116, 184, 0.62) 47.24%, rgba(45, 139, 186, 0.62) 69.359%, rgba(35, 94, 203, 0.62) 87.791%), linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.1) 100%)"
+  const statusCompletedBorder = "rgba(3, 162, 255, 0.44)"
+  const statusCompletedFg = "#ffffff"
+
+  const statusCancelledBg =
+    "linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 100%), linear-gradient(18.25756307538974deg, rgba(221, 29, 29, 0.62) 14.063%, rgba(239, 35, 38, 0.62) 47.24%, rgba(184, 0, 0, 0.62) 69.359%, rgba(183, 14, 14, 0.62) 87.791%), linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.1) 100%)"
+  const statusCancelledBorder = "rgba(230, 7, 7, 0.44)"
+  const statusCancelledFg = "#ffffff"
+
   return {
     primary,
     primaryForeground,
@@ -266,7 +300,19 @@ export function computeVelaTheme(branding?: TenantBranding | null): VelaThemeTok
     glassFloatingFill,
     liquidGradient,
     liquidGlow,
-    liquidGlowLg
+    liquidGlowLg,
+    statusConfirmedBg,
+    statusConfirmedBorder,
+    statusConfirmedFg,
+    statusActiveBg,
+    statusActiveBorder,
+    statusActiveFg,
+    statusCompletedBg,
+    statusCompletedBorder,
+    statusCompletedFg,
+    statusCancelledBg,
+    statusCancelledBorder,
+    statusCancelledFg
   }
 }
 
@@ -306,5 +352,17 @@ export function getVelaThemeStyles(branding?: TenantBranding | null): React.CSSP
     "--vela-liquid-gradient": tokens.liquidGradient,
     "--vela-liquid-glow": tokens.liquidGlow,
     "--vela-liquid-glow-lg": tokens.liquidGlowLg,
+    "--vela-status-confirmed-bg": tokens.statusConfirmedBg,
+    "--vela-status-confirmed-border": tokens.statusConfirmedBorder,
+    "--vela-status-confirmed-fg": tokens.statusConfirmedFg,
+    "--vela-status-active-bg": tokens.statusActiveBg,
+    "--vela-status-active-border": tokens.statusActiveBorder,
+    "--vela-status-active-fg": tokens.statusActiveFg,
+    "--vela-status-completed-bg": tokens.statusCompletedBg,
+    "--vela-status-completed-border": tokens.statusCompletedBorder,
+    "--vela-status-completed-fg": tokens.statusCompletedFg,
+    "--vela-status-cancelled-bg": tokens.statusCancelledBg,
+    "--vela-status-cancelled-border": tokens.statusCancelledBorder,
+    "--vela-status-cancelled-fg": tokens.statusCancelledFg,
   } as React.CSSProperties
 }

@@ -552,6 +552,10 @@ describe("Vela Liquid Glass Design System & Navigation (Step 4N)", () => {
       "src/components/dashboard/MobileFloatingDock.tsx",
       "src/app/(dashboard)/dashboard/bookings/new/page.tsx",
       "src/app/(dashboard)/dashboard/bookings/new/ManualBookingForm.tsx",
+      "src/app/(dashboard)/dashboard/bookings/page.tsx",
+      "src/app/(dashboard)/dashboard/bookings/BookingStatusActions.tsx",
+      "src/app/(dashboard)/dashboard/bookings/BookingNotePill.tsx",
+      "src/app/(dashboard)/dashboard/bookings/booking-ui-helpers.ts",
       "src/components/ui/GlassPanel.tsx",
       "src/app/globals.css",
       "src/lib/theme/index.ts"

@@ -3,19 +3,58 @@ import { notFound, redirect } from "next/navigation"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth/config"
 import Link from "next/link"
-import { format } from "date-fns"
+import { BookingStatus, Prisma } from "@prisma/client"
 import BookingStatusActions from "./BookingStatusActions"
-import { Prisma } from "@prisma/client"
-
+import BookingNotePill from "./BookingNotePill"
 import { getDashboardTenant } from "@/lib/tenant/context"
+import { VelaThemeScope } from "@/components/theme/VelaThemeScope"
 import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell"
+import {
+  BookingStatusGroup,
+  buildBookingFilterHref,
+  formatBookingDateParts,
+  getBookingStatusVisual,
+  getClientAvatarSrc,
+  resolveBookingStatusFilter
+} from "./booking-ui-helpers"
 
-export default async function DashboardBookingsPage({ 
-  searchParams
-}: { 
-  searchParams: Promise<{ status?: string, date?: string, page?: string }>
+function BookingStatusCapsule({
+  status,
+  variant = "mobile"
+}: {
+  status: BookingStatus | string
+  variant?: "mobile" | "desktop"
 }) {
-  const { status, date, page = "1" } = await searchParams;
+  const { label, semanticState, capsuleClass } = getBookingStatusVisual(status)
+  return (
+    <span
+      data-testid="booking-status-capsule"
+      data-booking-status={status}
+      data-semantic-state={semanticState}
+      className={`${capsuleClass} inline-flex items-center justify-center h-[32px] px-[5px] rounded-[60px] font-medium text-white text-center whitespace-nowrap shrink-0 ${
+        variant === "desktop"
+          ? "w-[82px] xl:w-[97px] text-[10px] xl:text-[11px]"
+          : "w-[97px] text-[10px]"
+      }`}
+    >
+      <span className="sr-only">Stato: </span>
+      {label}
+    </span>
+  )
+}
+
+export default async function DashboardBookingsPage({
+  searchParams
+}: {
+  searchParams: Promise<{
+    statusGroup?: string
+    status?: string
+    date?: string
+    page?: string
+  }>
+}) {
+  const { statusGroup, status, date, page = "1" } = await searchParams
+  const resolvedFilter = resolveBookingStatusFilter({ statusGroup, status })
 
   const tenant = await getDashboardTenant()
   if (!tenant) notFound()
@@ -36,25 +75,26 @@ export default async function DashboardBookingsPage({
   const employeeId = membership.employeeProfile?.id
 
   const whereClause: Prisma.BookingWhereInput = { tenantId: tenant.id }
-  
+
   if (role === "EMPLOYEE" && employeeId) {
     whereClause.employeeId = employeeId
   }
 
-  if (status && status !== "ALL") {
-    whereClause.status = status as any
+  if (resolvedFilter.whereStatus) {
+    whereClause.status = resolvedFilter.whereStatus
   }
 
   if (date) {
     const startOfDay = new Date(date)
-    startOfDay.setUTCHours(0,0,0,0)
+    startOfDay.setUTCHours(0, 0, 0, 0)
     const endOfDay = new Date(date)
-    endOfDay.setUTCHours(23,59,59,999)
+    endOfDay.setUTCHours(23, 59, 59, 999)
     whereClause.startTime = { gte: startOfDay, lte: endOfDay }
   }
 
   const take = 15
-  const skip = (Math.max(1, parseInt(page)) - 1) * take
+  const currentPage = Math.max(1, parseInt(page) || 1)
+  const skip = (currentPage - 1) * take
 
   const [bookings, total] = await Promise.all([
     prisma.booking.findMany({
@@ -64,9 +104,13 @@ export default async function DashboardBookingsPage({
         employee: true,
         customer: true,
         oneTimeClient: true,
-        location: true
+        location: true,
+        notes: {
+          orderBy: { createdAt: "desc" },
+          take: 1
+        }
       },
-      orderBy: { startTime: 'asc' },
+      orderBy: { startTime: "asc" },
       skip,
       take
     }),
@@ -75,127 +119,657 @@ export default async function DashboardBookingsPage({
 
   const totalPages = Math.ceil(total / take)
 
+  const filterItems: Array<{
+    key: BookingStatusGroup
+    href: string
+    mobileLabel: string
+    desktopLabel: string
+    mobileWidth: string
+    desktopWidth: string
+    isActive: boolean
+  }> = [
+    {
+      key: "ALL",
+      href: buildBookingFilterHref("ALL", date),
+      mobileLabel: "Tutte",
+      desktopLabel: "Tutte",
+      mobileWidth: "w-[72px]",
+      desktopWidth: "w-[79px]",
+      isActive: resolvedFilter.activeGroup === "ALL"
+    },
+    {
+      key: "ACTIVE",
+      href: buildBookingFilterHref("ACTIVE", date),
+      mobileLabel: "In corso",
+      desktopLabel: "In corso",
+      mobileWidth: "w-[91px]",
+      desktopWidth: "w-[91px]",
+      isActive: resolvedFilter.activeGroup === "ACTIVE"
+    },
+    {
+      key: "CONFIRMED",
+      href: buildBookingFilterHref("CONFIRMED", date),
+      mobileLabel: "Confermate",
+      desktopLabel: "Confermato",
+      mobileWidth: "w-[112px]",
+      desktopWidth: "w-[109px]",
+      isActive: resolvedFilter.activeGroup === "CONFIRMED"
+    },
+    {
+      key: "COMPLETED",
+      href: buildBookingFilterHref("COMPLETED", date),
+      mobileLabel: "Completate",
+      desktopLabel: "Completato",
+      mobileWidth: "w-[101px]",
+      desktopWidth: "w-[109px]",
+      isActive: resolvedFilter.activeGroup === "COMPLETED"
+    },
+    {
+      key: "CANCELLED",
+      href: buildBookingFilterHref("CANCELLED", date),
+      mobileLabel: "Cancellate",
+      desktopLabel: "Cancellato",
+      mobileWidth: "w-[105px]",
+      desktopWidth: "w-[109px]",
+      isActive: resolvedFilter.activeGroup === "CANCELLED"
+    }
+  ]
+
   return (
-    <DashboardPageShell variant="wide" className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-2xl font-bold">Bookings</h1>
-        <div className="flex gap-2">
-          <Link href={`/dashboard/bookings/new`} className="px-4 py-2 bg-black text-white font-medium rounded hover:bg-gray-800 text-sm">
-            + New Booking
+    <VelaThemeScope branding={tenant} className="w-full">
+      <DashboardPageShell
+        variant="wide"
+        className="pt-[13.45px] lg:pt-[65.62px] max-w-[329px] sm:max-w-[540px] md:max-w-[680px] lg:max-w-[1034px] mx-auto lg:mx-0"
+      >
+        {/* Top Utility & Navigation Bar (Figma 111:429 Mobile & 114:1135 Desktop) */}
+        <div className="flex items-center justify-between w-full relative">
+          {/* Back Button (Mobile: 28.535px node 58:634 | Desktop: 40px node 114:1237) */}
+          <Link
+            href="/dashboard"
+            className="relative size-[28.535px] lg:size-[40px] lg:mt-[12.38px] rounded-[100px] bg-[var(--pulsantiglass,rgba(211,211,211,0.15))] border border-white/25 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 flex items-center justify-center transition-all cursor-pointer shrink-0 after:content-[''] after:absolute after:-inset-2"
+          >
+            <img
+              alt=""
+              src="/figma/fi-rr-angle-small-left.svg"
+              className="size-[15px] lg:size-[20px]"
+            />
+            <span className="sr-only">Torna alla dashboard</span>
+          </Link>
+
+          {/* Mobile Centered Tenant Name (Figma node 111:491) */}
+          <span className="lg:hidden text-[13px] font-medium text-white text-center truncate max-w-[200px]">
+            {tenant.name}
+          </span>
+
+          {/* Mobile Top-Right Settings Action (Figma node 59:676) */}
+          <Link
+            href="/dashboard/settings"
+            aria-label="Impostazioni"
+            className="lg:hidden relative size-[28.535px] rounded-[100px] bg-[var(--pulsantiglass,rgba(211,211,211,0.15))] border border-white/25 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 flex items-center justify-center transition-all cursor-pointer shrink-0 after:content-[''] after:absolute after:-inset-2"
+          >
+            <img
+              alt=""
+              src="/figma/fi-rr-settings.svg"
+              className="size-[15px]"
+            />
+          </Link>
+
+          {/* Desktop Top-Right Utility Bar: Search + Notification Bell + Profile Avatar (Figma nodes 114:1239, 102:2192, 114:1236) */}
+          <div className="hidden lg:flex items-center gap-[12px]">
+            <div className="vela-figma-subtle flex items-center gap-[8.5px] h-[42px] w-[202px] pl-[13.6px] pr-[16px] py-[13.6px] rounded-[12px]">
+              <img
+                alt=""
+                src="/figma/fi-rr-search.svg"
+                className="size-[15.3px] shrink-0"
+              />
+              <span className="text-[13.6px] font-normal text-white/75 whitespace-nowrap">
+                Cerca...
+              </span>
+            </div>
+
+            <button
+              type="button"
+              aria-label="Notifiche"
+              className="relative size-[41px] rounded-full flex items-center justify-center shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+            >
+              <img
+                alt=""
+                src="/figma/notification-bell-unread.svg"
+                className="size-full block"
+              />
+            </button>
+
+            <div className="relative size-[41px] rounded-full overflow-hidden shrink-0">
+              <img
+                alt="Profilo"
+                src="/figma/avatar-profile.png"
+                width={41}
+                height={41}
+                className="size-full object-cover block"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Page Title & Subtitle (Mobile node 111:487 | Desktop nodes 114:1201 & 114:1202) */}
+        <div className="mt-[28px] lg:mt-[18px] flex flex-col gap-[6px] lg:gap-[4px] items-start">
+          <h1 className="text-[20px] lg:text-[33px] font-medium lg:font-semibold text-white leading-none tracking-tight">
+            Prenotazioni
+          </h1>
+          <p className="text-[10px] lg:text-[19px] font-normal text-[var(--textdeselected,#8c95a9)] lg:text-white/75 leading-tight">
+            Gestisci le prenotazioni del tuo salone
+          </p>
+        </div>
+
+        {/* Mobile Primary "Nuova prenotazione" CTA (Figma node 114:812) */}
+        <div className="lg:hidden mt-[14px]">
+          <Link
+            href="/dashboard/bookings/new"
+            data-testid="mobile-new-booking-cta"
+            className="vela-liquid-primary-lg flex items-center justify-center gap-[19.6px] h-[50px] w-full px-[9.8px] py-[12px] rounded-[13px] text-[13px] font-medium text-white transition-transform active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+          >
+            <img
+              alt=""
+              src="/figma/fi-rr-calendar-cta.svg"
+              className="size-[15px] shrink-0"
+            />
+            <span>Nuova prenotazione</span>
           </Link>
         </div>
-      </div>
 
-      <div className="flex flex-col md:flex-row gap-4 justify-between bg-white p-4 rounded-xl shadow border">
-        <div className="flex gap-2 flex-wrap">
-          <Link href={`/dashboard/bookings`} className={`px-3 py-1 rounded-full text-sm font-medium ${!status || status === 'ALL' ? 'bg-black text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-800'}`}>All</Link>
-          <Link href={`/dashboard/bookings?status=PENDING`} className={`px-3 py-1 rounded-full text-sm font-medium ${status === 'PENDING' ? 'bg-yellow-500 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-800'}`}>Pending</Link>
-          <Link href={`/dashboard/bookings?status=CONFIRMED`} className={`px-3 py-1 rounded-full text-sm font-medium ${status === 'CONFIRMED' ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-800'}`}>Confirmed</Link>
-          <Link href={`/dashboard/bookings?status=COMPLETED`} className={`px-3 py-1 rounded-full text-sm font-medium ${status === 'COMPLETED' ? 'bg-green-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-800'}`}>Completed</Link>
-          <Link href={`/dashboard/bookings?status=CANCELLED`} className={`px-3 py-1 rounded-full text-sm font-medium ${status === 'CANCELLED' ? 'bg-red-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-800'}`}>Cancelled</Link>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-xl shadow border overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50 border-b">
-                <th className="p-4 font-medium text-sm text-gray-600">Client</th>
-                <th className="p-4 font-medium text-sm text-gray-600">Date & Time</th>
-                <th className="p-4 font-medium text-sm text-gray-600">Staff</th>
-                <th className="p-4 font-medium text-sm text-gray-600">Services</th>
-                <th className="p-4 font-medium text-sm text-gray-600">Status</th>
-                <th className="p-4 font-medium text-sm text-gray-600 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {bookings.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="p-8 text-center text-gray-500">
-                    No bookings found.
-                  </td>
-                </tr>
-              ) : (
-                bookings.map((booking) => {
-                  const clientName = booking.customer 
-                    ? `${booking.customer.firstName} ${booking.customer.lastName}`
-                    : booking.oneTimeClient 
-                      ? `${booking.oneTimeClient.firstName} ${booking.oneTimeClient.lastName}`
-                      : "Unknown"
-
-                  return (
-                    <tr key={booking.id} className="hover:bg-gray-50">
-                      <td className="p-4">
-                        <div className="font-medium text-gray-900">{clientName}</div>
-                        {!booking.customer && <span className="text-xs text-gray-500">One-Time</span>}
-                      </td>
-                      <td className="p-4 whitespace-nowrap">
-                        <div className="font-medium text-gray-900">{format(booking.startTime, "MMM d, yyyy")}</div>
-                        <div className="text-sm text-gray-500">{format(booking.startTime, "h:mm a")} - {format(booking.endTime, "h:mm a")}</div>
-                      </td>
-                      <td className="p-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{booking.employee.name}</div>
-                      </td>
-                      <td className="p-4">
-                        <div className="text-sm text-gray-900 line-clamp-2" title={booking.services.map(s => s.serviceName).join(", ")}>
-                          {booking.services.map(s => s.serviceName).join(", ")}
-                        </div>
-                      </td>
-                      <td className="p-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          booking.status === "PENDING" ? "bg-yellow-100 text-yellow-800" :
-                          booking.status === "CONFIRMED" ? "bg-blue-100 text-blue-800" :
-                          booking.status === "COMPLETED" ? "bg-green-100 text-green-800" :
-                          booking.status === "CANCELLED" ? "bg-red-100 text-red-800" :
-                          "bg-gray-100 text-gray-800"
-                        }`}>
-                          {booking.status}
-                        </span>
-                      </td>
-                      <td className="p-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {booking.status === "PENDING" && (
-                            <BookingStatusActions 
-                              tenantId={tenant.id}
-                              userId={session.user.id}
-                              bookingId={booking.id}
-                              currentStatus={booking.status}
-                              role={role as any}
-                              compact={true}
-                            />
-                          )}
-                          <Link href={`/dashboard/bookings/${booking.id}`} className="text-sm font-medium text-blue-600 hover:underline">
-                            View
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-        
-        {totalPages > 1 && (
-          <div className="p-4 border-t flex justify-between items-center bg-gray-50 text-sm">
-            <Link 
-              href={`/dashboard/bookings?${status ? `status=${status}&` : ''}${date ? `date=${date}&` : ''}page=${Math.max(1, parseInt(page) - 1)}`}
-              className={`px-3 py-1 rounded border bg-white ${parseInt(page) <= 1 ? 'opacity-50 pointer-events-none' : 'hover:bg-gray-50'}`}
+        {/* Mobile Status Filter Pills (Figma node 114:836) */}
+        <nav
+          aria-label="Filtra prenotazioni per stato (mobile)"
+          data-testid="mobile-status-filters"
+          className="lg:hidden mt-[14px] pl-[5px] flex flex-wrap items-center gap-x-[13px] gap-y-[12px] w-full"
+        >
+          {filterItems.map(item => (
+            <Link
+              key={item.key}
+              href={item.href}
+              aria-current={item.isActive ? "page" : undefined}
+              data-filter-status={item.key}
+              className={`${item.mobileWidth} h-[32px] px-3 rounded-[60px] text-[10px] font-medium text-white text-center whitespace-nowrap flex items-center justify-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 ${
+                item.isActive ? "vela-liquid-primary" : "vela-figma-slot hover:bg-white/25"
+              }`}
             >
-              Previous
+              {item.mobileLabel}
             </Link>
-            <span>Page {page} of {totalPages}</span>
-            <Link 
-              href={`/dashboard/bookings?${status ? `status=${status}&` : ''}${date ? `date=${date}&` : ''}page=${Math.min(totalPages, parseInt(page) + 1)}`}
-              className={`px-3 py-1 rounded border bg-white ${parseInt(page) >= totalPages ? 'opacity-50 pointer-events-none' : 'hover:bg-gray-50'}`}
+          ))}
+        </nav>
+
+        {/* Desktop Full-Width Glass Filter Bar + Right CTA (Figma node 114:3238) */}
+        <div
+          data-testid="desktop-filter-bar"
+          className="hidden lg:flex mt-[14px] vela-figma-panel rounded-[20px] min-h-[53px] py-2 xl:py-0 xl:h-[53px] w-full px-5 xl:pl-[32px] xl:pr-[32px] min-[1400px]:pl-[44px] min-[1400px]:pr-[45px] flex-wrap xl:flex-nowrap items-center justify-between gap-2.5 xl:gap-4"
+        >
+          <nav
+            aria-label="Filtra prenotazioni per stato"
+            className="flex flex-wrap xl:flex-nowrap items-center gap-2 xl:gap-3 min-[1400px]:gap-[16px]"
+          >
+            {filterItems.map(item => (
+              <Link
+                key={item.key}
+                href={item.href}
+                aria-current={item.isActive ? "page" : undefined}
+                data-filter-status={item.key}
+                className={`${item.desktopWidth} h-[32px] px-3 rounded-[60px] text-[12px] font-medium text-white text-center whitespace-nowrap flex items-center justify-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 ${
+                  item.isActive ? "vela-liquid-primary" : "vela-figma-slot hover:bg-white/25"
+                }`}
+              >
+                {item.desktopLabel}
+              </Link>
+            ))}
+          </nav>
+
+          <Link
+            href="/dashboard/bookings/new"
+            data-testid="desktop-new-booking-cta"
+            className="vela-liquid-primary-lg flex items-center justify-center gap-3 xl:gap-[19.6px] h-[33px] w-auto px-4 xl:w-[220px] min-[1400px]:w-[248px] xl:px-[9.8px] rounded-[13px] text-[13px] font-medium text-white shrink-0 transition-transform active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+          >
+            <img
+              alt=""
+              src="/figma/fi-rr-calendar-cta.svg"
+              className="size-[15px] shrink-0"
+            />
+            <span>Nuova prenotazione</span>
+          </Link>
+        </div>
+
+        {/* MOBILE VIEWPORT (< 1024px): Vertical Glass Booking Cards (Figma node 111:746) */}
+        <section
+          aria-label="Elenco prenotazioni"
+          data-testid="mobile-bookings-list"
+          className="lg:hidden mt-[12px] flex flex-col gap-[12px] w-full"
+        >
+          {bookings.length === 0 ? (
+            <div
+              data-testid="bookings-empty-state-mobile"
+              className="vela-figma-panel rounded-[20px] px-6 py-10 flex flex-col items-center justify-center text-center gap-3 w-full"
             >
-              Next
+              <div className="vela-figma-subtle size-[44px] rounded-full flex items-center justify-center">
+                <img
+                  alt=""
+                  src="/figma/fi-rr-calendar-cta.svg"
+                  className="size-[18px] opacity-85"
+                />
+              </div>
+              <h2 className="text-[15px] font-medium text-white">
+                Nessuna prenotazione trovata
+              </h2>
+              <p className="text-[11px] font-normal text-[var(--textdeselected,#8c95a9)] max-w-[240px] leading-relaxed">
+                Non ci sono appuntamenti per il filtro selezionato. Crea una nuova prenotazione per iniziare.
+              </p>
+              <Link
+                href="/dashboard/bookings/new"
+                className="mt-1 vela-liquid-primary rounded-[13px] h-[38px] px-5 inline-flex items-center justify-center gap-2.5 text-[12px] font-medium text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+              >
+                <img
+                  alt=""
+                  src="/figma/fi-rr-calendar-cta.svg"
+                  className="size-[13px] shrink-0"
+                />
+                <span>Nuova prenotazione</span>
+              </Link>
+            </div>
+          ) : (
+            bookings.map(booking => {
+              const clientName = booking.customer
+                ? `${booking.customer.firstName} ${booking.customer.lastName}`.trim()
+                : booking.oneTimeClient
+                  ? `${booking.oneTimeClient.firstName} ${booking.oneTimeClient.lastName}`.trim()
+                  : "Cliente"
+              const employeeName = booking.employee
+                ? `${booking.employee.name}${
+                    booking.employee.surname ? ` ${booking.employee.surname}` : ""
+                  }`.trim()
+                : "Staff"
+              const serviceNames =
+                booking.services && booking.services.length > 0
+                  ? booking.services.map(s => s.serviceName).join(" + ")
+                  : "Servizio"
+              const dateParts = formatBookingDateParts(booking.startTime)
+              const avatarSrc = getClientAvatarSrc(
+                booking.customerId || booking.oneTimeClientId || clientName || booking.id
+              )
+              const latestNote =
+                (booking as any).notes?.[0]?.content ||
+                booking.internalNote ||
+                booking.customerNote ||
+                null
+
+              return (
+                <article
+                  key={booking.id}
+                  data-testid="mobile-booking-card"
+                  className="vela-figma-panel rounded-[20px] px-[17px] py-[11px] flex flex-col gap-[12px] w-full relative"
+                >
+                  {/* Card Row 1: Date & Time + Status Capsule + Overflow Menu */}
+                  <div className="flex items-center justify-between w-full gap-2">
+                    <div className="flex flex-col items-start gap-[2px] leading-none text-white font-medium whitespace-nowrap">
+                      <span className="text-[13px]">{dateParts.shortDate}</span>
+                      <span className="text-[16px]">{dateParts.time24}</span>
+                    </div>
+
+                    <div className="flex items-center gap-[10px] shrink-0">
+                      <BookingStatusCapsule status={booking.status} variant="mobile" />
+                      <BookingStatusActions
+                        tenantId={tenant.id}
+                        userId={session.user.id}
+                        bookingId={booking.id}
+                        currentStatus={booking.status}
+                        role={role as any}
+                        compact={true}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Card Row 2: Customer Avatar + Name & Service + Right Detail Chevron */}
+                  <div className="flex items-center justify-between w-full gap-[12px]">
+                    <div className="relative shrink-0 size-[35px] rounded-full overflow-hidden">
+                      <img
+                        alt={clientName}
+                        src={avatarSrc}
+                        width={35}
+                        height={35}
+                        className="size-full object-cover block"
+                      />
+                    </div>
+
+                    <div className="flex-1 min-w-0 flex items-center justify-between gap-[10px]">
+                      <div className="min-w-0 flex-1 flex flex-col gap-[5px] items-start leading-none">
+                        <h2 className="text-[11px] font-medium text-white truncate w-full">
+                          {clientName}
+                        </h2>
+                        <p className="text-[10px] font-medium text-white/75 truncate w-full">
+                          {serviceNames}
+                        </p>
+                      </div>
+
+                      <Link
+                        href={`/dashboard/bookings/${booking.id}`}
+                        aria-label={`Dettagli prenotazione di ${clientName}`}
+                        data-testid="booking-detail-chevron"
+                        className="relative shrink-0 size-[28.535px] rounded-[100px] bg-[var(--pulsantiglass,rgba(211,211,211,0.15))] border border-white/25 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 flex items-center justify-center transition-all after:content-[''] after:absolute after:-inset-2"
+                      >
+                        <img
+                          alt=""
+                          src="/figma/fi-rr-angle-small-right.svg"
+                          className="size-[15px]"
+                        />
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Card Row 3: Assigned Employee */}
+                  <div className="flex items-center gap-[12px]">
+                    <img
+                      alt=""
+                      src="/figma/fi-rr-portrait.svg"
+                      className="size-[15px] shrink-0"
+                    />
+                    <span className="text-[10px] font-medium text-white/75 truncate">
+                      {employeeName}
+                    </span>
+                  </div>
+
+                  {/* Card Row 4: Note Input / Display Pill */}
+                  <BookingNotePill
+                    tenantId={tenant.id}
+                    userId={session.user.id}
+                    bookingId={booking.id}
+                    initialNote={latestNote}
+                    variant="mobile"
+                  />
+                </article>
+              )
+            })
+          )}
+        </section>
+
+        {/* Mobile Bottom Fade Vignette Behind Floating Dock (Figma node 114:837) */}
+        <div
+          aria-hidden="true"
+          className="lg:hidden fixed bottom-0 left-0 right-0 h-[96.55px] bg-gradient-to-b from-[rgba(15,22,44,0)] to-[#0f162c] to-[52%] pointer-events-none z-30"
+        />
+
+        {/* DESKTOP VIEWPORT (>= 1024px): Single Large Glass Booking Table (Figma node 114:3206) */}
+        <section
+          aria-label="Tabella prenotazioni"
+          data-testid="desktop-bookings-container"
+          className="hidden lg:flex mt-[13px] vela-figma-panel rounded-[20px] px-4 xl:px-7 min-[1400px]:px-[44px] py-[18px] min-h-[650px] w-full flex-col justify-between"
+        >
+          <div className="w-full overflow-x-auto">
+            <table
+              data-testid="desktop-bookings-table"
+              className="w-full border-collapse text-left"
+            >
+              <thead>
+                <tr className="border-b border-white/15">
+                  <th
+                    scope="col"
+                    className="pb-[13px] pr-1.5 xl:pr-2.5 min-[1400px]:pr-3 text-[11px] font-medium text-white whitespace-nowrap"
+                  >
+                    Cliente
+                  </th>
+                  <th
+                    scope="col"
+                    className="pb-[13px] px-1.5 xl:px-2.5 min-[1400px]:px-3 text-[11px] font-medium text-white whitespace-nowrap"
+                  >
+                    Data &amp; Orario
+                  </th>
+                  <th
+                    scope="col"
+                    className="pb-[13px] px-1.5 xl:px-2.5 min-[1400px]:px-3 text-[11px] font-medium text-white whitespace-nowrap"
+                  >
+                    Staff
+                  </th>
+                  <th
+                    scope="col"
+                    className="pb-[13px] px-1.5 xl:px-2.5 min-[1400px]:px-3 text-[11px] font-medium text-white whitespace-nowrap"
+                  >
+                    Servizio
+                  </th>
+                  <th
+                    scope="col"
+                    className="pb-[13px] px-1.5 xl:px-2.5 min-[1400px]:px-3 text-[11px] font-medium text-white whitespace-nowrap"
+                  >
+                    Note
+                  </th>
+                  <th
+                    scope="col"
+                    className="pb-[13px] px-1.5 xl:px-2.5 min-[1400px]:px-3 text-[11px] font-medium text-white whitespace-nowrap"
+                  >
+                    Stato
+                  </th>
+                  <th
+                    scope="col"
+                    className="pb-[13px] pl-1.5 xl:pl-2.5 min-[1400px]:pl-3 text-[11px] font-medium text-white text-right whitespace-nowrap"
+                  >
+                    <span className="sr-only">Actions</span>
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody className="divide-y divide-white/12">
+                {bookings.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-24 px-6 text-center">
+                      <div
+                        data-testid="bookings-empty-state-desktop"
+                        className="flex flex-col items-center justify-center gap-3.5 max-w-md mx-auto"
+                      >
+                        <div className="vela-figma-subtle size-[48px] rounded-full flex items-center justify-center">
+                          <img
+                            alt=""
+                            src="/figma/fi-rr-calendar-cta.svg"
+                            className="size-[20px] opacity-85"
+                          />
+                        </div>
+                        <h2 className="text-[17px] font-semibold text-white">
+                          Nessuna prenotazione trovata
+                        </h2>
+                        <p className="text-[13px] font-normal text-white/70 leading-relaxed">
+                          Non ci sono appuntamenti per il filtro selezionato. Crea una nuova prenotazione per aggiungere un appuntamento in agenda.
+                        </p>
+                        <Link
+                          href="/dashboard/bookings/new"
+                          className="mt-1.5 vela-liquid-primary-lg rounded-[13px] h-[38px] px-6 inline-flex items-center justify-center gap-3 text-[13px] font-medium text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+                        >
+                          <img
+                            alt=""
+                            src="/figma/fi-rr-calendar-cta.svg"
+                            className="size-[15px] shrink-0"
+                          />
+                          <span>Nuova prenotazione</span>
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  bookings.map(booking => {
+                    const clientName = booking.customer
+                      ? `${booking.customer.firstName} ${booking.customer.lastName}`.trim()
+                      : booking.oneTimeClient
+                        ? `${booking.oneTimeClient.firstName} ${booking.oneTimeClient.lastName}`.trim()
+                        : "Cliente"
+                    const employeeName = booking.employee
+                      ? `${booking.employee.name}${
+                          booking.employee.surname ? ` ${booking.employee.surname}` : ""
+                        }`.trim()
+                      : "Staff"
+                    const serviceNames =
+                      booking.services && booking.services.length > 0
+                        ? booking.services.map(s => s.serviceName).join(" + ")
+                        : "Servizio"
+                    const totalDuration =
+                      booking.services?.reduce(
+                        (acc, s) => acc + (s.durationMinutes || 0),
+                        0
+                      ) || 0
+                    const totalPriceCents =
+                      booking.services?.reduce((acc, s) => acc + (s.price || 0), 0) || 0
+                    const totalPriceEuros = totalPriceCents / 100
+                    const formattedPrice = Number.isInteger(totalPriceEuros)
+                      ? `€${totalPriceEuros}`
+                      : `€${totalPriceEuros.toFixed(2)}`
+                    const durationAndPrice =
+                      totalDuration > 0
+                        ? `${totalDuration} min • ${formattedPrice}`
+                        : formattedPrice
+                    const dateParts = formatBookingDateParts(booking.startTime)
+                    const avatarSrc = getClientAvatarSrc(
+                      booking.customerId ||
+                        booking.oneTimeClientId ||
+                        clientName ||
+                        booking.id
+                    )
+                    const latestNote =
+                      (booking as any).notes?.[0]?.content ||
+                      booking.internalNote ||
+                      booking.customerNote ||
+                      null
+
+                    return (
+                      <tr
+                        key={booking.id}
+                        data-testid="desktop-booking-row"
+                        className="border-b border-white/12 hover:bg-white/[0.04] transition-colors"
+                      >
+                        {/* 1. Cliente */}
+                        <td className="py-[9px] pr-1.5 xl:pr-2.5 min-[1400px]:pr-3 align-middle">
+                          <Link
+                            href={`/dashboard/bookings/${booking.id}`}
+                            className="flex items-center gap-[8px] xl:gap-[10px] min-w-[95px] xl:min-w-[125px] group rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+                          >
+                            <span className="relative shrink-0 size-[28px] xl:size-[35px] rounded-full overflow-hidden block">
+                              <img
+                                alt={clientName}
+                                src={avatarSrc}
+                                width={35}
+                                height={35}
+                                className="size-full object-cover block"
+                              />
+                            </span>
+                            <span className="text-[11px] font-semibold text-white leading-tight group-hover:underline">
+                              {clientName}
+                            </span>
+                          </Link>
+                        </td>
+
+                        {/* 2. Data & Orario */}
+                        <td className="py-[9px] px-1.5 xl:px-2.5 min-[1400px]:px-3 align-middle whitespace-nowrap">
+                          <div className="flex flex-col gap-[2px] text-[10px] xl:text-[11px] font-medium text-white leading-tight">
+                            <span>{dateParts.fullDate}</span>
+                            <span>{dateParts.time24}</span>
+                          </div>
+                        </td>
+
+                        {/* 3. Staff */}
+                        <td className="py-[9px] px-1.5 xl:px-2.5 min-[1400px]:px-3 align-middle whitespace-nowrap">
+                          <div className="flex items-center gap-[8px] xl:gap-[12px]">
+                            <img
+                              alt=""
+                              src="/figma/fi-rr-portrait.svg"
+                              className="size-[14px] xl:size-[15px] shrink-0"
+                            />
+                            <span className="text-[10px] xl:text-[11px] font-medium text-white/75">
+                              {employeeName}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* 4. Servizio */}
+                        <td className="py-[9px] px-1.5 xl:px-2.5 min-[1400px]:px-3 align-middle">
+                          <div className="flex items-center gap-[8px] xl:gap-[10px]">
+                            <img
+                              alt=""
+                              src="/figma/icon-service-cube.svg"
+                              className="w-[13.784px] h-[14.947px] shrink-0"
+                            />
+                            <div className="flex flex-col text-[10px] font-medium leading-tight">
+                              <span className="text-white">{serviceNames}</span>
+                              <span className="text-white/75">{durationAndPrice}</span>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* 5. Note */}
+                        <td className="py-[9px] px-1.5 xl:px-2.5 min-[1400px]:px-3 align-middle">
+                          <BookingNotePill
+                            tenantId={tenant.id}
+                            userId={session.user.id}
+                            bookingId={booking.id}
+                            initialNote={latestNote}
+                            variant="desktop"
+                          />
+                        </td>
+
+                        {/* 6. Stato */}
+                        <td className="py-[9px] px-1.5 xl:px-2.5 min-[1400px]:px-3 align-middle whitespace-nowrap">
+                          <BookingStatusCapsule
+                            status={booking.status}
+                            variant="desktop"
+                          />
+                        </td>
+
+                        {/* 7. Actions */}
+                        <td className="py-[9px] pl-1.5 xl:pl-2.5 min-[1400px]:pl-3 align-middle text-right whitespace-nowrap">
+                          <BookingStatusActions
+                            tenantId={tenant.id}
+                            userId={session.user.id}
+                            bookingId={booking.id}
+                            currentStatus={booking.status}
+                            role={role as any}
+                            compact={true}
+                          />
+                        </td>
+                      </tr>
+                    )
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* Pagination Bar (Liquid Glass) */}
+        {totalPages > 1 && (
+          <div className="mt-4 vela-figma-panel rounded-[16px] px-5 py-3 flex items-center justify-between text-xs text-white">
+            <Link
+              href={buildBookingFilterHref(
+                resolvedFilter.activeGroup,
+                date,
+                Math.max(1, currentPage - 1)
+              )}
+              className={`vela-figma-subtle px-3.5 py-1.5 rounded-full font-medium transition-all ${
+                currentPage <= 1
+                  ? "opacity-40 pointer-events-none"
+                  : "hover:bg-white/25"
+              }`}
+            >
+              Precedente
+            </Link>
+            <span className="text-white/80 font-medium">
+              Pagina {currentPage} di {totalPages}
+            </span>
+            <Link
+              href={buildBookingFilterHref(
+                resolvedFilter.activeGroup,
+                date,
+                Math.min(totalPages, currentPage + 1)
+              )}
+              className={`vela-figma-subtle px-3.5 py-1.5 rounded-full font-medium transition-all ${
+                currentPage >= totalPages
+                  ? "opacity-40 pointer-events-none"
+                  : "hover:bg-white/25"
+              }`}
+            >
+              Successiva
             </Link>
           </div>
         )}
-      </div>
-    </DashboardPageShell>
+      </DashboardPageShell>
+    </VelaThemeScope>
   )
 }
