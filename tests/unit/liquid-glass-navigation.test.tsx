@@ -409,13 +409,13 @@ describe("Vela Liquid Glass Design System & Navigation (Step 4N)", () => {
     expect(settingsCode).toContain('variant="standard"')
   })
 
-  it("4N-B.7: Bookings, Customers, and Analytics pages use wide content width variant", () => {
+  it("4N-B.7: Bookings uses full content width variant while Customers and Analytics use wide content width variant", () => {
     const bookingsCode = fs.readFileSync(
       path.join(__dirname, "../../src/app/(dashboard)/dashboard/bookings/page.tsx"),
       "utf-8"
     )
     expect(bookingsCode).toContain('DashboardPageShell')
-    expect(bookingsCode).toContain('variant="wide"')
+    expect(bookingsCode).toContain('variant="full"')
 
     const customersCode = fs.readFileSync(
       path.join(__dirname, "../../src/app/(dashboard)/dashboard/customers/page.tsx"),

@@ -562,4 +562,25 @@ describe("STAGING STEP 4P — Figma-Authored Bookings Page UI", () => {
       expect(mobileLinks.filter(l => l.group !== "ACTIVE").every(l => !l.isActive)).toBe(true)
     })
   })
+
+  // =========================================================================
+  // STAGING STEP 4P-D: VIEWPORT GEOMETRY & FULL-WIDTH ALIGNMENT
+  // =========================================================================
+  describe("STAGING STEP 4P-D: Viewport Geometry & Full-Width Alignment", () => {
+    it("uses full DashboardPageShell variant without narrow max-w caps or double horizontal padding", async () => {
+      const pageElement = await DashboardBookingsPage({
+        searchParams: Promise.resolve({})
+      })
+      const html = renderToStaticMarkup(pageElement)
+
+      expect(html).toContain('data-shell-variant="full"')
+      expect(html).toContain("max-w-none")
+      expect(html).not.toContain("max-w-[338px]")
+      expect(html).not.toContain("lg:max-w-[1000px]")
+      expect(html).not.toContain("xl:max-w-[1040px]")
+      expect(html).toContain("lg:pr-[35px]")
+      expect(html).toContain("min-h-[53px]")
+      expect(html).toContain("min-h-[667px]")
+    })
+  })
 })

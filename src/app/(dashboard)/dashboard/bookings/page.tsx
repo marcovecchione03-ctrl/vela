@@ -178,12 +178,12 @@ export default async function DashboardBookingsPage({
   return (
     <VelaThemeScope branding={tenant} className="w-full">
       <DashboardPageShell
-        variant="wide"
-        className="pt-[13.45px] lg:pt-[65.62px] max-w-[329px] sm:max-w-[540px] md:max-w-[680px] lg:max-w-[1034px] mx-auto lg:mx-0"
+        variant="full"
+        className="pt-[13.45px] lg:pt-[65.62px] lg:pr-[35px] w-full max-w-none"
       >
         {/* Top Utility & Navigation Bar (Figma 111:429 Mobile & 114:1135 Desktop) */}
-        <div className="flex items-center justify-between w-full relative">
-          {/* Back Button (Mobile: 28.535px node 58:634 | Desktop: 40px node 114:1237) */}
+        <div className="flex items-center lg:items-start justify-between w-full relative">
+          {/* Back Button (Mobile: 28.535px node 58:634 | Desktop: 40px node 114:1237 at top=78px) */}
           <Link
             href="/dashboard"
             className="relative size-[28.535px] lg:size-[40px] lg:mt-[12.38px] rounded-[100px] bg-[var(--pulsantiglass,rgba(211,211,211,0.15))] border border-white/25 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 flex items-center justify-center transition-all cursor-pointer shrink-0 after:content-[''] after:absolute after:-inset-2"
@@ -251,18 +251,18 @@ export default async function DashboardBookingsPage({
           </div>
         </div>
 
-        {/* Page Title & Subtitle (Mobile node 111:487 | Desktop nodes 114:1201 & 114:1202) */}
-        <div className="mt-[28px] lg:mt-[18px] flex flex-col gap-[6px] lg:gap-[4px] items-start">
+        {/* Page Title & Subtitle (Mobile node 111:487 at top=72.45px | Desktop nodes 114:1201 & 114:1202 at top=141.21px) */}
+        <div className="mt-[30.5px] lg:mt-[23.2px] flex flex-col gap-[6px] lg:gap-[4px] items-start">
           <h1 className="text-[20px] lg:text-[33px] font-medium lg:font-semibold text-white leading-none tracking-tight">
             Prenotazioni
           </h1>
-          <p className="text-[10px] lg:text-[19px] font-normal text-[var(--textdeselected,#8c95a9)] lg:text-white/75 leading-tight">
+          <p className="text-[10px] lg:text-[19px] font-normal text-[var(--textdeselected,#8c95a9)] lg:text-white/75 leading-none">
             Gestisci le prenotazioni del tuo salone
           </p>
         </div>
 
-        {/* Mobile Primary "Nuova prenotazione" CTA (Figma node 114:812) */}
-        <div className="lg:hidden mt-[14px]">
+        {/* Mobile Primary "Nuova prenotazione" CTA (Figma node 114:812 at top=121px, h=50px) */}
+        <div className="lg:hidden mt-[12.5px]">
           <Link
             href="/dashboard/bookings/new"
             data-testid="mobile-new-booking-cta"
@@ -277,11 +277,11 @@ export default async function DashboardBookingsPage({
           </Link>
         </div>
 
-        {/* Mobile Status Filter Pills (Figma node 114:836) */}
+        {/* Mobile Status Filter Pills (Figma node 114:836 at top=185px) */}
         <nav
           aria-label="Filtra prenotazioni per stato (mobile)"
           data-testid="mobile-status-filters"
-          className="lg:hidden mt-[14px] pl-[5px] flex flex-wrap items-center gap-x-[13px] gap-y-[12px] w-full"
+          className="lg:hidden mt-[14px] flex flex-wrap items-center gap-x-[13px] gap-y-[12px] w-full"
         >
           {filterItems.map(item => (
             <Link
@@ -298,14 +298,14 @@ export default async function DashboardBookingsPage({
           ))}
         </nav>
 
-        {/* Desktop Full-Width Glass Filter Bar + Right CTA (Figma node 114:3238) */}
+        {/* Desktop Full-Width Glass Filter Bar + Right CTA (Figma node 114:3238 at left=333px, top=213px, w=1034px, h=53px) */}
         <div
           data-testid="desktop-filter-bar"
-          className="hidden lg:flex mt-[14px] vela-figma-panel rounded-[20px] min-h-[53px] py-2 xl:py-0 xl:h-[53px] w-full px-5 xl:pl-[32px] xl:pr-[32px] min-[1400px]:pl-[44px] min-[1400px]:pr-[45px] flex-wrap xl:flex-nowrap items-center justify-between gap-2.5 xl:gap-4"
+          className="hidden lg:flex mt-[16px] vela-figma-panel rounded-[20px] min-h-[53px] py-2 xl:py-0 xl:h-[53px] w-full px-6 xl:pl-[44px] xl:pr-[45px] flex-wrap xl:flex-nowrap items-center justify-between gap-2.5 xl:gap-4"
         >
           <nav
             aria-label="Filtra prenotazioni per stato"
-            className="flex flex-wrap xl:flex-nowrap items-center gap-2 xl:gap-3 min-[1400px]:gap-[16px]"
+            className="flex flex-wrap xl:flex-nowrap items-center gap-2.5 xl:gap-[16px]"
           >
             {filterItems.map(item => (
               <Link
@@ -325,7 +325,7 @@ export default async function DashboardBookingsPage({
           <Link
             href="/dashboard/bookings/new"
             data-testid="desktop-new-booking-cta"
-            className="vela-liquid-primary-lg flex items-center justify-center gap-3 xl:gap-[19.6px] h-[33px] w-auto px-4 xl:w-[220px] min-[1400px]:w-[248px] xl:px-[9.8px] rounded-[13px] text-[13px] font-medium text-white shrink-0 transition-transform active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+            className="vela-liquid-primary-lg flex items-center justify-center gap-3 xl:gap-[19.6px] h-[33px] w-auto px-4 xl:w-[248px] xl:px-[9.8px] rounded-[13px] text-[13px] font-medium text-white shrink-0 transition-transform active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
           >
             <img
               alt=""
@@ -336,25 +336,25 @@ export default async function DashboardBookingsPage({
           </Link>
         </div>
 
-        {/* MOBILE VIEWPORT (< 1024px): Vertical Glass Booking Cards (Figma node 111:746) */}
+        {/* MOBILE VIEWPORT (< 1024px): Vertical Glass Booking Cards (Figma node 111:746 at top=270.45px, w=328.4px) */}
         <section
           aria-label="Elenco prenotazioni"
           data-testid="mobile-bookings-list"
-          className="lg:hidden mt-[12px] flex flex-col gap-[12px] w-full"
+          className="lg:hidden mt-[9.5px] pb-[24px] flex flex-col gap-[12px] w-full"
         >
           {bookings.length === 0 ? (
             <div
               data-testid="bookings-empty-state-mobile"
-              className="vela-figma-panel rounded-[20px] px-6 py-10 flex flex-col items-center justify-center text-center gap-3 w-full"
+              className="vela-figma-panel rounded-[20px] px-6 py-12 min-h-[280px] flex flex-col items-center justify-center text-center gap-3.5 w-full"
             >
-              <div className="vela-figma-subtle size-[44px] rounded-full flex items-center justify-center">
+              <div className="vela-figma-subtle size-[48px] rounded-full flex items-center justify-center mb-0.5">
                 <img
                   alt=""
                   src="/figma/fi-rr-calendar-cta.svg"
-                  className="size-[18px] opacity-85"
+                  className="size-[19px] opacity-85"
                 />
               </div>
-              <h2 className="text-[15px] font-medium text-white">
+              <h2 className="text-[15px] font-medium text-white leading-snug">
                 Nessuna prenotazione trovata
               </h2>
               <p className="text-[11px] font-normal text-[var(--textdeselected,#8c95a9)] max-w-[240px] leading-relaxed">
@@ -362,7 +362,7 @@ export default async function DashboardBookingsPage({
               </p>
               <Link
                 href="/dashboard/bookings/new"
-                className="mt-1 vela-liquid-primary rounded-[13px] h-[38px] px-5 inline-flex items-center justify-center gap-2.5 text-[12px] font-medium text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+                className="mt-2 vela-liquid-primary rounded-[13px] h-[40px] px-6 inline-flex items-center justify-center gap-2.5 text-[12px] font-medium text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
               >
                 <img
                   alt=""
@@ -493,11 +493,11 @@ export default async function DashboardBookingsPage({
           className="lg:hidden fixed bottom-0 left-0 right-0 h-[96.55px] bg-gradient-to-b from-[rgba(15,22,44,0)] to-[#0f162c] to-[52%] pointer-events-none z-30"
         />
 
-        {/* DESKTOP VIEWPORT (>= 1024px): Single Large Glass Booking Table (Figma node 114:3206) */}
+        {/* DESKTOP VIEWPORT (>= 1024px): Single Large Glass Booking Table (Figma node 114:3206 at left=333px, top=279px, w=1034px, h=667px) */}
         <section
           aria-label="Tabella prenotazioni"
           data-testid="desktop-bookings-container"
-          className="hidden lg:flex mt-[13px] vela-figma-panel rounded-[20px] px-4 xl:px-7 min-[1400px]:px-[44px] py-[18px] min-h-[650px] w-full flex-col justify-between"
+          className="hidden lg:flex mt-[13px] vela-figma-panel rounded-[20px] px-6 xl:px-[44px] py-[20px] min-h-[667px] w-full flex-col justify-between"
         >
           <div className="w-full overflow-x-auto">
             <table
@@ -508,43 +508,43 @@ export default async function DashboardBookingsPage({
                 <tr className="border-b border-white/15">
                   <th
                     scope="col"
-                    className="pb-[13px] pr-1.5 xl:pr-2.5 min-[1400px]:pr-3 text-[11px] font-medium text-white whitespace-nowrap"
+                    className="pb-[15px] pr-2 xl:pr-3 text-[11px] font-medium text-white whitespace-nowrap"
                   >
                     Cliente
                   </th>
                   <th
                     scope="col"
-                    className="pb-[13px] px-1.5 xl:px-2.5 min-[1400px]:px-3 text-[11px] font-medium text-white whitespace-nowrap"
+                    className="pb-[15px] px-2 xl:px-3 text-[11px] font-medium text-white whitespace-nowrap"
                   >
                     Data &amp; Orario
                   </th>
                   <th
                     scope="col"
-                    className="pb-[13px] px-1.5 xl:px-2.5 min-[1400px]:px-3 text-[11px] font-medium text-white whitespace-nowrap"
+                    className="pb-[15px] px-2 xl:px-3 text-[11px] font-medium text-white whitespace-nowrap"
                   >
                     Staff
                   </th>
                   <th
                     scope="col"
-                    className="pb-[13px] px-1.5 xl:px-2.5 min-[1400px]:px-3 text-[11px] font-medium text-white whitespace-nowrap"
+                    className="pb-[15px] px-2 xl:px-3 text-[11px] font-medium text-white whitespace-nowrap"
                   >
                     Servizio
                   </th>
                   <th
                     scope="col"
-                    className="pb-[13px] px-1.5 xl:px-2.5 min-[1400px]:px-3 text-[11px] font-medium text-white whitespace-nowrap"
+                    className="pb-[15px] px-2 xl:px-3 text-[11px] font-medium text-white whitespace-nowrap"
                   >
                     Note
                   </th>
                   <th
                     scope="col"
-                    className="pb-[13px] px-1.5 xl:px-2.5 min-[1400px]:px-3 text-[11px] font-medium text-white whitespace-nowrap"
+                    className="pb-[15px] px-2 xl:px-3 text-[11px] font-medium text-white whitespace-nowrap"
                   >
                     Stato
                   </th>
                   <th
                     scope="col"
-                    className="pb-[13px] pl-1.5 xl:pl-2.5 min-[1400px]:pl-3 text-[11px] font-medium text-white text-right whitespace-nowrap"
+                    className="pb-[15px] pl-2 xl:pl-3 text-[11px] font-medium text-white text-right whitespace-nowrap"
                   >
                     <span className="sr-only">Actions</span>
                   </th>
@@ -554,27 +554,27 @@ export default async function DashboardBookingsPage({
               <tbody className="divide-y divide-white/12">
                 {bookings.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-24 px-6 text-center">
+                    <td colSpan={7} className="py-36 px-8 text-center">
                       <div
                         data-testid="bookings-empty-state-desktop"
-                        className="flex flex-col items-center justify-center gap-3.5 max-w-md mx-auto"
+                        className="flex flex-col items-center justify-center gap-4 max-w-[420px] mx-auto"
                       >
-                        <div className="vela-figma-subtle size-[48px] rounded-full flex items-center justify-center">
+                        <div className="vela-figma-subtle size-[54px] rounded-full flex items-center justify-center mb-0.5">
                           <img
                             alt=""
                             src="/figma/fi-rr-calendar-cta.svg"
-                            className="size-[20px] opacity-85"
+                            className="size-[22px] opacity-85"
                           />
                         </div>
-                        <h2 className="text-[17px] font-semibold text-white">
+                        <h2 className="text-[18px] font-semibold text-white">
                           Nessuna prenotazione trovata
                         </h2>
-                        <p className="text-[13px] font-normal text-white/70 leading-relaxed">
+                        <p className="text-[13px] font-normal text-white/75 leading-relaxed">
                           Non ci sono appuntamenti per il filtro selezionato. Crea una nuova prenotazione per aggiungere un appuntamento in agenda.
                         </p>
                         <Link
                           href="/dashboard/bookings/new"
-                          className="mt-1.5 vela-liquid-primary-lg rounded-[13px] h-[38px] px-6 inline-flex items-center justify-center gap-3 text-[13px] font-medium text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+                          className="mt-2 vela-liquid-primary-lg rounded-[13px] h-[40px] px-6 inline-flex items-center justify-center gap-3 text-[13px] font-medium text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
                         >
                           <img
                             alt=""
@@ -637,7 +637,7 @@ export default async function DashboardBookingsPage({
                         className="border-b border-white/12 hover:bg-white/[0.04] transition-colors"
                       >
                         {/* 1. Cliente */}
-                        <td className="py-[9px] pr-1.5 xl:pr-2.5 min-[1400px]:pr-3 align-middle">
+                        <td className="py-[9px] pr-2 xl:pr-3 align-middle">
                           <Link
                             href={`/dashboard/bookings/${booking.id}`}
                             className="flex items-center gap-[8px] xl:gap-[10px] min-w-[95px] xl:min-w-[125px] group rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
@@ -658,7 +658,7 @@ export default async function DashboardBookingsPage({
                         </td>
 
                         {/* 2. Data & Orario */}
-                        <td className="py-[9px] px-1.5 xl:px-2.5 min-[1400px]:px-3 align-middle whitespace-nowrap">
+                        <td className="py-[9px] px-2 xl:px-3 align-middle whitespace-nowrap">
                           <div className="flex flex-col gap-[2px] text-[10px] xl:text-[11px] font-medium text-white leading-tight">
                             <span>{dateParts.fullDate}</span>
                             <span>{dateParts.time24}</span>
@@ -666,7 +666,7 @@ export default async function DashboardBookingsPage({
                         </td>
 
                         {/* 3. Staff */}
-                        <td className="py-[9px] px-1.5 xl:px-2.5 min-[1400px]:px-3 align-middle whitespace-nowrap">
+                        <td className="py-[9px] px-2 xl:px-3 align-middle whitespace-nowrap">
                           <div className="flex items-center gap-[8px] xl:gap-[12px]">
                             <img
                               alt=""
@@ -680,7 +680,7 @@ export default async function DashboardBookingsPage({
                         </td>
 
                         {/* 4. Servizio */}
-                        <td className="py-[9px] px-1.5 xl:px-2.5 min-[1400px]:px-3 align-middle">
+                        <td className="py-[9px] px-2 xl:px-3 align-middle">
                           <div className="flex items-center gap-[8px] xl:gap-[10px]">
                             <img
                               alt=""
@@ -695,7 +695,7 @@ export default async function DashboardBookingsPage({
                         </td>
 
                         {/* 5. Note */}
-                        <td className="py-[9px] px-1.5 xl:px-2.5 min-[1400px]:px-3 align-middle">
+                        <td className="py-[9px] px-2 xl:px-3 align-middle">
                           <BookingNotePill
                             tenantId={tenant.id}
                             userId={session.user.id}
@@ -706,7 +706,7 @@ export default async function DashboardBookingsPage({
                         </td>
 
                         {/* 6. Stato */}
-                        <td className="py-[9px] px-1.5 xl:px-2.5 min-[1400px]:px-3 align-middle whitespace-nowrap">
+                        <td className="py-[9px] px-2 xl:px-3 align-middle whitespace-nowrap">
                           <BookingStatusCapsule
                             status={booking.status}
                             variant="desktop"
@@ -714,7 +714,7 @@ export default async function DashboardBookingsPage({
                         </td>
 
                         {/* 7. Actions */}
-                        <td className="py-[9px] pl-1.5 xl:pl-2.5 min-[1400px]:pl-3 align-middle text-right whitespace-nowrap">
+                        <td className="py-[9px] pl-2 xl:pl-3 align-middle text-right whitespace-nowrap">
                           <BookingStatusActions
                             tenantId={tenant.id}
                             userId={session.user.id}
@@ -735,7 +735,7 @@ export default async function DashboardBookingsPage({
 
         {/* Pagination Bar (Liquid Glass) */}
         {totalPages > 1 && (
-          <div className="mt-4 vela-figma-panel rounded-[16px] px-5 py-3 flex items-center justify-between text-xs text-white">
+          <div className="mt-4 vela-figma-panel rounded-[16px] px-6 py-3 flex items-center justify-between text-xs text-white">
             <Link
               href={buildBookingFilterHref(
                 resolvedFilter.activeGroup,

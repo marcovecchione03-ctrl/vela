@@ -72,13 +72,13 @@ export function MobileFloatingDock({ tenant, role }: MobileFloatingDockProps) {
 
   return (
     <>
-      {/* Mobile Floating Glass Dock (Figma node 46:68 inside 59:869) */}
+      {/* Mobile Floating Glass Dock (Figma node 46:68 inside 59:869 / 111:429) */}
       <nav
         aria-label="Mobile Navigation"
-        className="lg:hidden fixed bottom-[20px] left-1/2 -translate-x-1/2 z-40 max-w-[calc(100vw-1.5rem)] w-auto"
+        className="lg:hidden fixed bottom-[20px] left-[30.5px] right-[30.5px] sm:left-8 sm:right-8 md:left-10 md:right-10 z-40"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
-        <div className="vela-figma-floating backdrop-blur-3xl rounded-full rounded-[53px] h-[63px] w-[327.6px] px-[17px] py-[11px] flex items-center justify-between gap-[20px] border border-white/10">
+        <div className="vela-figma-floating backdrop-blur-3xl rounded-full rounded-[53px] h-[63px] w-full px-[17px] py-[11px] flex items-center justify-between gap-[20px] border border-white/10">
           <DockItem
             href="/dashboard"
             variant="overview"
